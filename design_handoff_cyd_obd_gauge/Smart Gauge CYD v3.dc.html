@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#101114;font-family:'Chakra Petch',sans-serif;color:#F2F2EE}a{color:#FFB000}a:hover{color:#FFC94D}</style>
+</helmet>
+<section style="padding:56px 64px 80px;display:flex;flex-direction:column;gap:44px;width:max-content">
+  <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:40px;border-bottom:1px solid #2A2F36;padding-bottom:24px">
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div style="font-size:14px;letter-spacing:3px;color:#FFB000;font-weight:600">CYD OBD-II · v3 · DARK / LIGHT · 320×240</div>
+      <div style="font-size:44px;font-weight:700;line-height:1.05">Professional redesign</div>
+      <div style="font-size:17px;color:#8A9099;max-width:980px;text-wrap:pretty">ปรับจากภาพถ่ายจอจริง: ตัวหนังสือ 7–8px อ่านไม่ออกบน TFT → ขั้นต่ำ 10px · ลดจำนวนช่องให้แต่ละค่าใหญ่ขึ้น · CONFIG เป็นรายการแบบ settings · เพิ่มธีม Dark / Light / Auto · แสดงขนาดจริง ×2</div>
+    </div>
+  </div>
+
+  <sc-for list="{{ themes }}" as="th" hint-placeholder-count="2">
+  <div style="display:flex;flex-direction:column;gap:18px">
+    <div style="display:flex;align-items:baseline;gap:14px"><span style="font-size:22px;font-weight:700">{{ th.title }}</span><span style="font-size:15px;color:#8A9099">{{ th.note }}</span></div>
+    <div style="display:grid;grid-template-columns:repeat(4,max-content);gap:36px">
+
+      <!-- DASH -->
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="font-size:14px;color:#8A9099;letter-spacing:1px">01 · DASH</div>
+        <div style="background:#1E2024;padding:16px;border-radius:14px;box-shadow:0 0 0 1px #2A2F36,0 20px 40px rgba(0,0,0,.5)">
+          <div style="width:640px;height:480px;overflow:hidden;border-radius:3px">
+            <div style="width:320px;height:240px;transform:scale(2);transform-origin:0 0;position:relative;background:{{ th.bg }};color:{{ th.text }};font-variant-numeric:tabular-nums">
+              <div style="position:absolute;left:0;top:0;right:0;height:24px;display:flex;align-items:center;justify-content:space-between;padding:0 10px;border-bottom:1px solid {{ th.line }}">
+                <div style="display:flex;align-items:center;gap:6px"><span style="font-size:11px;font-weight:700;letter-spacing:.5px">OBD-II</span><sc-if value="{{ isSim }}" hint-placeholder-val="{{ true }}"><span style="font-size:10px;font-weight:700;color:#000;background:{{ th.accent }};padding:0 5px;border-radius:2px;line-height:14px">SIM</span></sc-if></div>
+                <div style="display:flex;align-items:center;gap:5px;font-size:10px;font-weight:600;color:{{ th.btColor }}"><span style="width:6px;height:6px;border-radius:50%;background:{{ th.btDot }}"></span>{{ btText }}</div>
+              </div>
+              <svg width="164" height="180" viewBox="0 0 164 180" style="position:absolute;left:0;top:24px">
+                <path d="M36.16 147.84 A62 62 0 1 1 123.84 147.84" fill="none" stroke="{{ th.track }}" stroke-width="11"></path>
+                <path d="M29.8 154.2 A71 71 0 1 1 130.2 154.2" fill="none" stroke="{{ th.bad }}" stroke-width="3" pathLength="100" stroke-dasharray="0 81.25 18.75 100"></path>
+                <path d="M36.16 147.84 A62 62 0 1 1 123.84 147.84" fill="none" stroke="{{ th.rpmColor }}" stroke-width="11" pathLength="100" stroke-dasharray="{{ rpmDash }}"></path>
+                <sc-for list="{{ th.ticks }}" as="t" hint-placeholder-count="0">
+                  <line x1="{{ t.x1 }}" y1="{{ t.y1 }}" x2="{{ t.x2 }}" y2="{{ t.y2 }}" stroke="{{ t.c }}" stroke-width="1.5"></line>
+                </sc-for>
+              </svg>
+              <div style="position:absolute;left:0;width:160px;top:78px;display:flex;flex-direction:column;align-items:center">
+                <div style="font-size:50px;font-weight:600;line-height:1;letter-spacing:-1.5px">{{ speed }}</div>
+                <div style="font-size:11px;font-weight:500;color:{{ th.muted }};margin-top:3px">km/h</div>
+              </div>
+              <div style="position:absolute;left:0;width:160px;top:160px;display:flex;justify-content:center;align-items:baseline;gap:4px">
+                <span style="font-size:18px;font-weight:700;color:{{ th.rpmText }}">{{ rpmText }}</span><span style="font-size:10px;font-weight:600;color:{{ th.muted }}">RPM</span>
+              </div>
+              <div style="position:absolute;left:162px;right:6px;top:30px;display:grid;grid-template-columns:1fr 1fr;gap:4px">
+                <sc-for list="{{ th.tiles }}" as="tile" hint-placeholder-count="4">
+                  <div style="height:58px;box-sizing:border-box;background:{{ th.surf }};border-radius:4px;padding:6px 7px 7px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:{{ th.cardShadow }}">
+                    <div style="font-size:10px;font-weight:600;color:{{ th.muted }};white-space:nowrap">{{ tile.label }}</div>
+                    <div style="font-size:24px;font-weight:600;line-height:1;color:{{ tile.text }}">{{ tile.value }}</div>
+                    <div style="height:4px;background:{{ th.track }};border-radius:2px;overflow:hidden"><div style="height:4px;width:{{ tile.pct }};background:{{ tile.color }}"></div></div>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="position:absolute;left:162px;right:6px;top:154px;height:46px;box-sizing:border-box;background:{{ th.surf }};border-radius:4px;padding:5px 7px;display:flex;flex-direction:column;justify-content:space-around;box-shadow:{{ th.cardShadow }}">
+                <sc-for list="{{ th.bars }}" as="b" hint-placeholder-count="2">
+                  <div style="display:grid;grid-template-columns:44px 1fr 26px;align-items:center;gap:6px">
+                    <span style="font-size:10px;font-weight:600;color:{{ th.muted }}">{{ b.label }}</span>
+                    <div style="height:4px;background:{{ th.track }};border-radius:2px;overflow:hidden"><div style="height:4px;width:{{ b.pct }};background:{{ th.text }}"></div></div>
+                    <span style="font-size:11px;font-weight:700;text-align:right">{{ b.value }}</span>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="position:absolute;left:0;right:0;bottom:0;height:36px;display:grid;grid-template-columns:1fr 1fr 1fr;border-top:1px solid {{ th.line }};background:{{ th.bar }};font-size:12px;font-weight:700;letter-spacing:1px">
+                <div style="display:flex;align-items:center;justify-content:center;color:{{ th.text }};box-shadow:inset 0 3px 0 {{ th.accent }}">DASH</div>
+                <div style="display:flex;align-items:center;justify-content:center;gap:5px;color:{{ th.muted }}">FAULT<span style="font-size:10px;color:#fff;background:{{ th.bad }};border-radius:7px;padding:0 5px;line-height:14px">3</span></div>
+                <div style="display:flex;align-items:center;justify-content:center;color:{{ th.muted }}">CONFIG</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FAULT -->
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="font-size:14px;color:#8A9099;letter-spacing:1px">02 · FAULT</div>
+        <div style="background:#1E2024;padding:16px;border-radius:14px;box-shadow:0 0 0 1px #2A2F36,0 20px 40px rgba(0,0,0,.5)">
+          <div style="width:640px;height:480px;overflow:hidden;border-radius:3px">
+            <div style="width:320px;height:240px;transform:scale(2);transform-origin:0 0;position:relative;background:{{ th.bg }};color:{{ th.text }};font-variant-numeric:tabular-nums">
+              <div style="position:absolute;left:0;top:0;right:0;height:24px;display:flex;align-items:center;justify-content:space-between;padding:0 10px;border-bottom:1px solid {{ th.line }}">
+                <div style="display:flex;align-items:center;gap:6px"><span style="font-size:11px;font-weight:700;letter-spacing:.5px">OBD-II</span><sc-if value="{{ isSim }}" hint-placeholder-val="{{ true }}"><span style="font-size:10px;font-weight:700;color:#000;background:{{ th.accent }};padding:0 5px;border-radius:2px;line-height:14px">SIM</span></sc-if></div>
+                <div style="display:flex;align-items:center;gap:5px;font-size:10px;font-weight:600;color:{{ th.btColor }}"><span style="width:6px;height:6px;border-radius:50%;background:{{ th.btDot }}"></span>{{ btText }}</div>
+              </div>
+              <div style="position:absolute;left:8px;right:8px;top:28px;height:22px;display:flex;align-items:center;justify-content:space-between">
+                <div style="display:flex;align-items:baseline;gap:6px"><span style="font-size:20px;font-weight:700;line-height:1;color:{{ th.bad }}">3</span><span style="font-size:11px;font-weight:600">Fault codes</span></div>
+                <span style="font-size:10px;font-weight:700;color:#000;background:{{ th.accent }};padding:0 6px;border-radius:2px;line-height:16px;letter-spacing:.5px">MIL ON</span>
+              </div>
+              <div style="position:absolute;left:6px;right:6px;top:53px;display:flex;flex-direction:column;gap:3px">
+                <sc-for list="{{ th.faults }}" as="f" hint-placeholder-count="3">
+                  <div style="height:34px;background:{{ th.surf }};border-radius:4px;display:grid;grid-template-columns:3px 58px minmax(0,1fr);align-items:center;gap:8px;padding-right:8px;overflow:hidden;box-shadow:{{ th.cardShadow }}">
+                    <div style="height:34px;background:{{ f.color }}"></div>
+                    <div style="font-size:14px;font-weight:700;letter-spacing:.3px">{{ f.code }}</div>
+                    <div style="display:flex;flex-direction:column;gap:0;min-width:0"><span style="font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:14px">{{ f.en }}</span><span style="font-size:10px;color:{{ th.muted }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:14px">{{ f.th }}</span></div>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="position:absolute;left:6px;right:6px;top:164px;height:34px;display:grid;grid-template-columns:86px 1fr;gap:6px;font-size:12px;font-weight:700;letter-spacing:1px">
+                <div style="display:flex;align-items:center;justify-content:center;background:{{ th.surf }};border:1px solid {{ th.line }};border-radius:4px">READ</div>
+                <div style="position:relative;display:flex;align-items:center;justify-content:center;gap:6px;border:1.5px solid {{ th.bad }};border-radius:4px;color:{{ th.bad }};overflow:hidden">
+                  <div style="position:absolute;left:0;top:0;bottom:0;width:{{ holdPct }};background:{{ th.badSoft }}"></div>
+                  <span style="position:relative">CLEAR</span><span style="position:relative;font-size:10px;font-weight:600;color:{{ th.muted }};letter-spacing:.5px">HOLD 2s</span>
+                </div>
+              </div>
+              <div style="position:absolute;left:0;right:0;bottom:0;height:36px;display:grid;grid-template-columns:1fr 1fr 1fr;border-top:1px solid {{ th.line }};background:{{ th.bar }};font-size:12px;font-weight:700;letter-spacing:1px">
+                <div style="display:flex;align-items:center;justify-content:center;color:{{ th.muted }}">DASH</div>
+                <div style="display:flex;align-items:center;justify-content:center;gap:5px;color:{{ th.text }};box-shadow:inset 0 3px 0 {{ th.accent }}">FAULT<span style="font-size:10px;color:#fff;background:{{ th.bad }};border-radius:7px;padding:0 5px;line-height:14px">3</span></div>
+                <div style="display:flex;align-items:center;justify-content:center;color:{{ th.muted }}">CONFIG</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CONFIG -->
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="font-size:14px;color:#8A9099;letter-spacing:1px">03 · CONFIG</div>
+        <div style="background:#1E2024;padding:16px;border-radius:14px;box-shadow:0 0 0 1px #2A2F36,0 20px 40px rgba(0,0,0,.5)">
+          <div style="width:640px;height:480px;overflow:hidden;border-radius:3px">
+            <div style="width:320px;height:240px;transform:scale(2);transform-origin:0 0;position:relative;background:{{ th.bg }};color:{{ th.text }};font-variant-numeric:tabular-nums">
+              <div style="position:absolute;left:0;top:0;right:0;height:24px;display:flex;align-items:center;justify-content:space-between;padding:0 10px;border-bottom:1px solid {{ th.line }}">
+                <div style="display:flex;align-items:center;gap:6px"><span style="font-size:11px;font-weight:700;letter-spacing:.5px">OBD-II</span><sc-if value="{{ isSim }}" hint-placeholder-val="{{ true }}"><span style="font-size:10px;font-weight:700;color:#000;background:{{ th.accent }};padding:0 5px;border-radius:2px;line-height:14px">SIM</span></sc-if></div>
+                <div style="display:flex;align-items:center;gap:5px;font-size:10px;font-weight:600;color:{{ th.btColor }}"><span style="width:6px;height:6px;border-radius:50%;background:{{ th.btDot }}"></span>{{ btText }}</div>
+              </div>
+              <div style="position:absolute;left:6px;right:6px;top:30px;background:{{ th.surf }};border-radius:4px;overflow:hidden;box-shadow:{{ th.cardShadow }}">
+                <div style="height:31px;display:flex;align-items:center;justify-content:space-between;padding:0 10px;border-bottom:1px solid {{ th.line }}">
+                  <span style="font-size:11px;font-weight:600;color:{{ th.muted }}">Adapter</span>
+                  <div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;font-weight:700">OBDII</span><span style="font-size:14px;color:{{ th.muted }}">›</span></div>
+                </div>
+                <div style="height:31px;display:flex;align-items:center;justify-content:space-between;padding:0 10px;border-bottom:1px solid {{ th.line }}">
+                  <span style="font-size:11px;font-weight:600;color:{{ th.muted }}">PIN</span>
+                  <div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;font-weight:700;letter-spacing:2px">••••</span><span style="font-size:14px;color:{{ th.muted }}">›</span></div>
+                </div>
+                <div style="height:31px;display:flex;align-items:center;justify-content:space-between;padding:0 6px 0 10px;border-bottom:1px solid {{ th.line }}">
+                  <span style="font-size:11px;font-weight:600;color:{{ th.muted }}">Theme</span>
+                  <div style="display:flex;gap:2px;background:{{ th.track }};padding:2px;border-radius:4px">
+                    <sc-for list="{{ th.seg }}" as="sg" hint-placeholder-count="3">
+                      <div style="width:44px;height:20px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;letter-spacing:.5px;border-radius:3px;background:{{ sg.bg }};color:{{ sg.fg }}">{{ sg.t }}</div>
+                    </sc-for>
+                  </div>
+                </div>
+                <div style="height:33px;display:grid;grid-template-columns:62px 1fr 32px;align-items:center;gap:8px;padding:0 10px">
+                  <span style="font-size:11px;font-weight:600;color:{{ th.muted }}">Backlight</span>
+                  <div style="position:relative;height:16px;display:flex;align-items:center">
+                    <div style="position:absolute;left:0;right:0;height:4px;background:{{ th.track }};border-radius:2px"></div>
+                    <div style="position:absolute;left:0;width:{{ th.blPct }};height:4px;background:{{ th.accent }};border-radius:2px"></div>
+                    <div style="position:absolute;left:calc({{ th.blPct }} - 7px);width:14px;height:14px;border-radius:50%;background:{{ th.knob }};box-shadow:0 0 0 1px {{ th.line }}"></div>
+                  </div>
+                  <span style="font-size:12px;font-weight:700;text-align:right">{{ th.blText }}</span>
+                </div>
+              </div>
+              <div style="position:absolute;left:6px;right:6px;top:164px;height:34px;display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px;font-weight:700;letter-spacing:1px">
+                <div style="display:flex;align-items:center;justify-content:center;background:{{ th.accent }};color:#000;border-radius:4px">CONNECT</div>
+                <div style="display:flex;align-items:center;justify-content:center;gap:6px;background:{{ th.surf }};border:1px solid {{ th.line }};border-radius:4px">RECAL<span style="font-size:10px;font-weight:600;color:{{ th.muted }};letter-spacing:.5px">HOLD 2s</span></div>
+              </div>
+              <div style="position:absolute;left:0;right:0;bottom:0;height:36px;display:grid;grid-template-columns:1fr 1fr 1fr;border-top:1px solid {{ th.line }};background:{{ th.bar }};font-size:12px;font-weight:700;letter-spacing:1px">
+                <div style="display:flex;align-items:center;justify-content:center;color:{{ th.muted }}">DASH</div>
+                <div style="display:flex;align-items:center;justify-content:center;gap:5px;color:{{ th.muted }}">FAULT<span style="font-size:10px;color:#fff;background:{{ th.bad }};border-radius:7px;padding:0 5px;line-height:14px">3</span></div>
+                <div style="display:flex;align-items:center;justify-content:center;color:{{ th.text }};box-shadow:inset 0 3px 0 {{ th.accent }}">CONFIG</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ALERT -->
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="font-size:14px;color:#8A9099;letter-spacing:1px">04 · ALERT</div>
+        <div style="background:#1E2024;padding:16px;border-radius:14px;box-shadow:0 0 0 1px #2A2F36,0 20px 40px rgba(0,0,0,.5)">
+          <div style="width:640px;height:480px;overflow:hidden;border-radius:3px">
+            <div style="width:320px;height:240px;transform:scale(2);transform-origin:0 0;position:relative;background:{{ th.alertBg }};font-variant-numeric:tabular-nums;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:{{ th.alertFg }}">
+              <svg width="34" height="30" viewBox="0 0 34 30"><path d="M17 2 L32 28 L2 28 Z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"></path><rect x="15.5" y="11" width="3" height="9" fill="currentColor"></rect><rect x="15.5" y="22" width="3" height="3" fill="currentColor"></rect></svg>
+              <div style="font-size:30px;font-weight:700;letter-spacing:2px;line-height:1">OVERHEAT</div>
+              <div style="display:flex;align-items:baseline;gap:6px"><span style="font-size:11px;font-weight:700;letter-spacing:1px">COOLANT</span><span style="font-size:24px;font-weight:700">{{ alertText }}</span></div>
+              <div style="font-size:12px;font-weight:600">ลดความเร็ว และจอดพักเครื่องยนต์</div>
+              <div style="margin-top:6px;background:{{ th.alertBtnBg }};color:{{ th.alertBtnFg }};font-size:12px;font-weight:700;padding:10px 22px;border-radius:4px">แตะเพื่อรับทราบ</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  </sc-for>
+
+  <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:48px;border-top:1px solid #2A2F36;padding-top:28px">
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div style="font-size:13px;letter-spacing:2px;color:#8A9099;font-weight:600">THEME TOKENS · HEX / RGB565</div>
+      <div style="display:grid;grid-template-columns:120px 1fr 1fr;gap:6px 20px;font-size:13px;align-items:center">
+        <span style="color:#8A9099">Token</span><span style="color:#8A9099">Dark</span><span style="color:#8A9099">Light</span>
+        <sc-for list="{{ tokenRows }}" as="r" hint-placeholder-count="10">
+          <span style="font-weight:600">{{ r.name }}</span>
+          <div style="display:flex;align-items:center;gap:8px"><span style="width:18px;height:18px;border-radius:3px;background:{{ r.d }};box-shadow:inset 0 0 0 1px #2A2F36"></span><span>{{ r.d }}</span><span style="color:#8A9099">{{ r.d565 }}</span></div>
+          <div style="display:flex;align-items:center;gap:8px"><span style="width:18px;height:18px;border-radius:3px;background:{{ r.l }};box-shadow:inset 0 0 0 1px #2A2F36"></span><span>{{ r.l }}</span><span style="color:#8A9099">{{ r.l565 }}</span></div>
+        </sc-for>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="font-size:13px;letter-spacing:2px;color:#8A9099;font-weight:600">สิ่งที่เปลี่ยนจาก v2 (จากภาพจอจริง)</div>
+      <div style="font-size:14px;line-height:1.6;color:#C9CCD1;display:flex;flex-direction:column;gap:6px;text-wrap:pretty">
+        <div>• ป้ายกำกับ 7px → 10–11px ตัวหนา 600 · ตัวเลขรอง 18px ขึ้นไป</div>
+        <div>• DASH: 6 ช่องเล็ก → 4 ช่องหลัก + แถบ THROTTLE / LOAD แนวนอน</div>
+        <div>• FAULT: ตัดปุ่ม ‹ › ออก (แสดงเมื่อเกิน 3 รหัส) ปุ่ม CLEAR กว้างขึ้น</div>
+        <div>• CONFIG: รายการแบบ settings + ปุ่มเลือกธีม DARK / LIGHT / AUTO (AUTO = สลับตามแสงหรือเวลา)</div>
+        <div>• Light mode ใช้สีสถานะเข้มขึ้นให้คอนทราสต์ผ่านบนพื้นสว่าง</div>
+        <div>• พื้นหลังในภาพจริงยังเป็นน้ำเงินไล่สี: ใช้ fillScreen(สี bg) สีเดียว ถ้าดำแล้วยังออกน้ำเงินให้ตรวจ invertDisplay() และ TFT_RGB_ORDER</div>
+      </div>
+    </div>
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;btState&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;connecting&quot;,&quot;connected&quot;,&quot;lost&quot;],&quot;default&quot;:&quot;connecting&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;sim&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;unit&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;°C&quot;,&quot;°F&quot;],&quot;default&quot;:&quot;°C&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;live&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;coolantLimit&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;min&quot;:95,&quot;max&quot;:115,&quot;step&quot;:1,&quot;unit&quot;:&quot;°C&quot;,&quot;default&quot;:105,&quot;tsType&quot;:&quot;number&quot;}}">
+const T = {
+  dark:  { bg: '#000000', surf: '#14171B', line: '#2A2F36', track: '#22262C', muted: '#9AA0A8', text: '#F2F2EE', accent: '#FFB000', ok: '#3DDC97', warn: '#FFB000', bad: '#FF4D3D', bar: '#0A0B0D', knob: '#F2F2EE', badSoft: '#3A1210', cardShadow: 'none', alertA: '#FF4D3D', alertB: '#D93A2B', alertFg: '#000000', alertBtnBg: '#000000', alertBtnFg: '#F2F2EE' },
+  light: { bg: '#ECEAE5', surf: '#FFFFFF', line: '#D6D3CC', track: '#E2DFD8', muted: '#5C626A', text: '#121418', accent: '#F5A400', ok: '#0E8A57', warn: '#A86800', bad: '#D2281D', bar: '#FFFFFF', knob: '#FFFFFF', badSoft: '#FBE0DD', cardShadow: '0 0 0 1px #DEDBD4', alertA: '#D2281D', alertB: '#B01F16', alertFg: '#FFFFFF', alertBtnBg: '#FFFFFF', alertBtnFg: '#B01F16' }
+};
+class Component extends DCLogic {
+  state = { rpm: 4360, speed: 101, cool: 89, throt: 24, load: 34, batt: 14.0, intake: 34, fuel: 60, blink: false, hold: 0 };
+  componentDidMount() {
+    this.t = setInterval(() => this.setState(s => {
+      const base = { blink: !s.blink, hold: (s.hold + 10) % 120 };
+      if (this.props.live === false) return base;
+      const w = (v, d, lo, hi) => Math.min(hi, Math.max(lo, v + (Math.random() - 0.5) * d));
+      const throt = w(s.throt, 12, 0, 90), rpm = w(s.rpm * 0.7 + (900 + throt * 70) * 0.3, 500, 800, 7400);
+      return { ...base, rpm, throt, speed: Math.round(w(s.speed, 4, 0, 160)), cool: w(s.cool, 1.2, 80, 104), load: w(s.load, 7, 5, 90), batt: w(s.batt, 0.15, 12.1, 14.5), intake: w(s.intake, 0.8, 25, 50), fuel: Math.max(0, s.fuel - 0.02) };
+    }), 600);
+  }
+  componentWillUnmount() { clearInterval(this.t); }
+  renderVals() {
+    const s = this.state, F = this.props.unit === '°F', limit = this.props.coolantLimit ?? 105, bt = this.props.btState ?? 'connecting';
+    const tv = c => Math.round(F ? c * 9 / 5 + 32 : c);
+    const pct = (v, a, b) => Math.max(4, Math.min(100, (v - a) / (b - a) * 100)) + '%';
+    const hex565 = h => { const n = parseInt(h.slice(1), 16), r = n >> 16, g = (n >> 8) & 255, b = n & 255; return '0x' + (((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3)).toString(16).toUpperCase().padStart(4, '0'); };
+    const build = (key, title, note) => {
+      const c = T[key];
+      const lvl = (bad, warn) => bad ? c.bad : warn ? c.warn : c.ok;
+      const coolC = lvl(s.cool >= limit, s.cool >= limit - 8), battC = lvl(s.batt < 12.4, s.batt < 12.8), fuelC = lvl(s.fuel < 10, s.fuel < 20);
+      const tile = (label, value, p, color) => ({ label, value, pct: p, color, text: color === c.ok ? c.text : color });
+      const ticks = [];
+      for (let v = 0; v <= 8; v++) { const a = (135 + 270 * v / 8) * Math.PI / 180; ticks.push({ x1: 80 + 46 * Math.cos(a), y1: 104 + 46 * Math.sin(a), x2: 80 + 52 * Math.cos(a), y2: 104 + 52 * Math.sin(a), c: v >= 7 ? c.bad : c.muted }); }
+      const hi = s.rpm >= 6500;
+      const btC = { connecting: [c.warn, s.blink ? c.warn : c.line], connected: [c.ok, c.ok], lost: [c.bad, c.bad] }[bt] || [c.warn, c.warn];
+      return {
+        ...c, title, note, ticks,
+        rpmColor: hi ? c.bad : c.accent, rpmText: hi ? c.bad : (key === 'light' ? c.text : c.accent),
+        btColor: btC[0], btDot: btC[1],
+        tiles: [
+          tile('COOL ' + (F ? '°F' : '°C'), tv(s.cool), pct(s.cool, 60, 120), coolC),
+          tile('BATTERY V', s.batt.toFixed(1), pct(s.batt, 11, 15), battC),
+          tile('INTAKE ' + (F ? '°F' : '°C'), tv(s.intake), pct(s.intake, 0, 80), c.muted),
+          tile('FUEL %', Math.round(s.fuel), pct(s.fuel, 0, 100), fuelC)
+        ].map(t => ({ ...t, text: t.color === c.muted ? c.text : t.text })),
+        bars: [{ label: 'THROTTLE', pct: pct(s.throt, 0, 100), value: Math.round(s.throt) + '%' }, { label: 'LOAD', pct: pct(s.load, 0, 100), value: Math.round(s.load) + '%' }],
+        faults: [
+          { code: 'P0301', en: 'Cylinder 1 misfire', th: 'สูบ 1 จุดระเบิดไม่สมบูรณ์', color: c.bad },
+          { code: 'P0420', en: 'Catalyst efficiency B1', th: 'แคตาไลติกประสิทธิภาพต่ำ', color: c.warn },
+          { code: 'P0171', en: 'Mixture too lean B1', th: 'ส่วนผสมบางเกินไป', color: c.warn }
+        ],
+        seg: ['DARK', 'LIGHT', 'AUTO'].map(t => { const on = t.toLowerCase() === key; return { t, bg: on ? c.surf : 'transparent', fg: on ? c.text : c.muted }; }),
+        blPct: key === 'dark' ? '70%' : '95%', blText: key === 'dark' ? '70%' : '95%',
+        alertBg: s.blink ? c.alertA : c.alertB
+      };
+    };
+    const tokenKeys = [['Background', 'bg'], ['Surface', 'surf'], ['Line', 'line'], ['Track', 'track'], ['Muted', 'muted'], ['Text', 'text'], ['Accent', 'accent'], ['Normal', 'ok'], ['Watch', 'warn'], ['Danger', 'bad']];
+    return {
+      isSim: this.props.sim !== false,
+      btText: { connecting: 'BT CONNECTING', connected: 'BT CONNECTED', lost: 'BT LOST' }[bt] || 'BT CONNECTING',
+      speed: s.speed, rpmText: (Math.round(s.rpm / 10) * 10).toLocaleString('en-US'),
+      rpmDash: `${(s.rpm / 8000 * 100).toFixed(2)} 100`,
+      holdPct: Math.min(100, s.hold) + '%', alertText: tv(108) + (F ? '°F' : '°C'),
+      themes: [build('dark', 'Dark', 'ค่าเริ่มต้น · กลางคืน / ในห้องโดยสาร · backlight 60–70%'), build('light', 'Light', 'กลางวัน แดดส่อง · backlight 90–100% · ใช้สีสถานะเข้มขึ้น')],
+      tokenRows: tokenKeys.map(([name, k]) => ({ name, d: T.dark[k], l: T.light[k], d565: hex565(T.dark[k]), l565: hex565(T.light[k]) }))
+    };
+  }
+}
+</script>
+</body>
+</html>

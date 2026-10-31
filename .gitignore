@@ -1,0 +1,14 @@
+.pio/
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.bin
+*.elf
+*.map
+include/secrets.h
+
+# Python cache (tools/gen_fonts.py)
+__pycache__/
+
+# Claude Code worktrees
+.claude/worktrees/

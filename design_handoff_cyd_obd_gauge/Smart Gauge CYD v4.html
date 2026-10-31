@@ -1,0 +1,881 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Smart Gauge CYD v4</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--page:#101114;--panel:#17191D;--line:#2A2F36;--muted:#8A9099;--text:#F2F2EE;--accent:#FFB000}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--text);font-family:'Chakra Petch',system-ui,sans-serif}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 20px 60px;display:flex;flex-direction:column;gap:22px}
+header .eyebrow{font-size:13px;letter-spacing:3px;color:var(--accent);font-weight:600}
+header h1{margin:6px 0 4px;font-size:34px;line-height:1.1}
+header p{margin:0;color:var(--muted);max-width:900px;font-size:15px;line-height:1.5}
+.main{display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start}
+.device{background:#1E2024;padding:16px;border-radius:14px;box-shadow:0 0 0 1px var(--line),0 20px 40px rgba(0,0,0,.5);touch-action:none}
+.device svg{display:block;user-select:none;-webkit-user-select:none;cursor:pointer;border-radius:3px}
+.side{flex:1;min-width:300px;display:flex;flex-direction:column;gap:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px 16px}
+.card h2{margin:0 0 10px;font-size:13px;letter-spacing:2px;color:var(--muted);font-weight:600}
+.row{display:flex;flex-wrap:wrap;gap:8px}
+button.ctl{font:inherit;font-size:13px;font-weight:600;color:var(--text);background:#22262C;border:1px solid var(--line);border-radius:4px;padding:7px 12px;cursor:pointer}
+button.ctl.on{background:var(--accent);color:#000;border-color:var(--accent)}
+.kv{display:grid;grid-template-columns:max-content 1fr;gap:4px 12px;font-size:13px}
+.kv span:nth-child(odd){color:var(--muted)}
+ul.help{margin:0;padding-left:18px;font-size:13px;line-height:1.7;color:#C9CDD2}
+ul.help b{color:var(--text)}
+#log{font-size:12px;color:var(--muted);height:96px;overflow:auto;line-height:1.6;font-variant-numeric:tabular-nums}
+label.chk{font-size:13px;display:flex;gap:6px;align-items:center;color:#C9CDD2}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">CYD OBD-II · v4 · INTERACTIVE SMART GAUGE · 320×240</div>
+    <h1>Automotive smart gauge</h1>
+    <p>Prototype ขนาดจริงของจอ (แสดง ×2 หรือ ×3) ค่าทั้งหมดเป็นค่าจำลอง ใช้เมาส์แทนนิ้ว: แตะ, กดค้าง และปัดซ้าย/ขวาได้เหมือนบนบอร์ด
+    เลือกสถานการณ์ทางขวาเพื่อดูการตอบสนองของจอ (shift light, peak, จับเวลา 0–100, การเตือน)</p>
+  </header>
+
+  <div class="main">
+    <div class="device"><svg id="screen" viewBox="0 0 320 240" width="640" height="480"></svg></div>
+
+    <div class="side">
+      <div class="card">
+        <h2>สถานการณ์จำลอง</h2>
+        <div class="row" id="scenarios"></div>
+      </div>
+      <div class="card">
+        <h2>แสดงผล</h2>
+        <div class="row">
+          <button class="ctl" data-scale="2">×2</button>
+          <button class="ctl" data-scale="3">×3</button>
+          <label class="chk"><input type="checkbox" id="showHits"> แสดงพื้นที่แตะ</label>
+        </div>
+      </div>
+      <div class="card">
+        <h2>การโต้ตอบ</h2>
+        <ul class="help">
+          <li><b>ปัดซ้าย / ขวา</b> บนพื้นที่เนื้อหา: DRIVE ⇄ FOCUS ⇄ TRIP ⇄ FAULT</li>
+          <li><b>แตะการ์ด</b> ในหน้า DRIVE: เปิดหน้า FOCUS ของค่านั้น · <b>แตะมาตรวัด</b>: FOCUS ของรอบเครื่อง</li>
+          <li><b>กดค้างมาตรวัด 2 วิ</b>: ล้างเครื่องหมาย peak RPM</li>
+          <li>FOCUS: <b>‹ ›</b> เปลี่ยนค่า, <b>RESET</b> กดค้างล้าง MIN/AVG/MAX</li>
+          <li>TRIP: <b>ARM</b> เตรียมจับเวลา 0–100 km/h (ต้องจอดนิ่งก่อน), <b>RESET TRIP</b> กดค้าง</li>
+          <li>SET: <b>ลากขึ้น/ลง</b> เลื่อนรายการ, แถบความสว่างลากได้, ปุ่ม − + ปรับ shift light / เกณฑ์ความร้อน</li>
+          <li>แถบเตือน (toast) แตะเพื่อปิด · หน้า OVERHEAT แตะที่ใดก็ได้เพื่อรับทราบ</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h2>สถานะ</h2>
+        <div class="kv" id="state"></div>
+      </div>
+      <div class="card">
+        <h2>เหตุการณ์ (สิ่งที่เฟิร์มแวร์จะทำ)</h2>
+        <div id="log"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+// =====================================================================
+//  Theme tokens: v3 + new tokens for v4 (shift light, toast)
+// =====================================================================
+const THEMES = {
+  DARK: {bg:'#000000',surf:'#14171B',line:'#2A2F36',track:'#22262C',muted:'#9AA0A8',text:'#F2F2EE',accent:'#FFB000',ok:'#3DDC97',warn:'#FFB000',bad:'#FF4D3D',
+         bar:'#0A0B0D',knob:'#F2F2EE',badSoft:'#3A1210',alertA:'#FF4D3D',alertB:'#D93A2B',alertFg:'#000000',alertBtnBg:'#000000',alertBtnFg:'#F2F2EE',
+         onAccent:'#000000',onBad:'#FFFFFF',rpmNormal:'#FFB000',cardLine:null,shiftOff:'#1A1D22',accentSoft:'#3A2A00'},
+  LIGHT:{bg:'#ECEAE5',surf:'#FFFFFF',line:'#D6D3CC',track:'#E2DFD8',muted:'#5C626A',text:'#121418',accent:'#F5A400',ok:'#0E8A57',warn:'#A86800',bad:'#D2281D',
+         bar:'#FFFFFF',knob:'#FFFFFF',badSoft:'#FBE0DD',alertA:'#D2281D',alertB:'#B01F16',alertFg:'#FFFFFF',alertBtnBg:'#FFFFFF',alertBtnFg:'#B01F16',
+         onAccent:'#000000',onBad:'#FFFFFF',rpmNormal:'#121418',cardLine:'#DEDBD4',shiftOff:'#DCD9D2',accentSoft:'#FCEBC4'},
+};
+let T = THEMES.DARK;
+
+// =====================================================================
+//  Parameters
+// =====================================================================
+const P = {
+  rpm:   {name:'ENGINE SPEED', short:'RPM',  unit:'RPM', lo:0,  hi:8000, dec:0},
+  speed: {name:'VEHICLE SPEED',short:'SPEED',unit:'km/h',lo:0,  hi:200,  dec:0},
+  cool:  {name:'COOLANT',      short:'COOL', unit:'°C',  lo:60, hi:120,  dec:0},
+  volt:  {name:'BATTERY',      short:'BATT', unit:'V',   lo:11, hi:15,   dec:1},
+  fuel:  {name:'FUEL LEVEL',   short:'FUEL', unit:'%',   lo:0,  hi:100,  dec:0},
+  thr:   {name:'THROTTLE',     short:'THR',  unit:'%',   lo:0,  hi:100,  dec:0},
+  load:  {name:'ENGINE LOAD',  short:'LOAD', unit:'%',   lo:0,  hi:100,  dec:0},
+  iat:   {name:'INTAKE AIR',   short:'IAT',  unit:'°C',  lo:0,  hi:80,   dec:0},
+};
+const FOCUS_ORDER = ['rpm','speed','cool','volt','fuel','thr','load','iat'];
+const RPM_RED = 6500;
+
+// สถานะสี: ok / warn / bad / null (neutral)
+function level(key, v) {
+  if (v == null) return null;
+  const lim = S.cfg.coolLimit;
+  switch (key) {
+    case 'cool': return v >= lim ? 'bad' : v >= lim - 8 ? 'warn' : 'ok';
+    case 'volt': return v < 12.4 ? 'bad' : v < 12.8 ? 'warn' : 'ok';
+    case 'fuel': return v < 10 ? 'bad' : v < 20 ? 'warn' : 'ok';
+    case 'rpm':  return v >= RPM_RED ? 'bad' : null;
+    default: return null;
+  }
+}
+const fmt = (key, v) => v == null ? '--' : (P[key].dec ? v.toFixed(P[key].dec) : Math.round(v).toLocaleString('en-US'));
+
+// =====================================================================
+//  App state
+// =====================================================================
+const PAGES = ['drive','focus','trip','fault','set'];
+const SWIPE_PAGES = ['drive','focus','trip','fault'];
+const S = {
+  page:'drive', focusKey:'rpm', scale:2, showHits:false,
+  link:'CONNECTED',              // CONNECTING | CONNECTED | WAITING | DISCONNECTED
+  v:{rpm:820,speed:0,cool:88,volt:14.1,fuel:62,thr:0,load:18,iat:34},
+  stats:{}, hist:{}, peakRpm:0,
+  trip:{time:0,dist:0,move:0,maxSpeed:0,maxRpm:0},
+  zero:{st:'off',t0:0,result:null,best:null},     // off | armed | ready | run | done
+  dtc:{state:'idle',codes:[],mil:false,page:0},
+  cfg:{adapter:'OBDII',pin:'1234',theme:'DARK',bl:70,sound:2,shift:6000,coolLimit:105},
+  cfgScroll:0,
+  toast:null, alert:false, alertArmed:true,
+  press:null, sim:'idle', simT:0, lastHist:0, scan:null,
+};
+for (const k of Object.keys(P)) { S.stats[k] = {min:null,max:null,sum:0,n:0}; S.hist[k] = []; }
+
+const log = (msg) => {
+  const el = document.getElementById('log');
+  const t = new Date().toLocaleTimeString('en-GB');
+  el.insertAdjacentHTML('afterbegin', `<div>${t} · ${msg}</div>`);
+};
+
+// =====================================================================
+//  Sound (เหมือนเฟิร์มแวร์: คลื่นสี่เหลี่ยม)
+// =====================================================================
+let actx = null;
+function beep(notes) {
+  if (S.cfg.sound === 0) return;
+  try {
+    actx = actx || new AudioContext();
+    let t = actx.currentTime;
+    const vol = [0, .02, .05, .12][S.cfg.sound];
+    for (const [hz, ms] of notes) {
+      if (hz) {
+        const o = actx.createOscillator(), g = actx.createGain();
+        o.type = 'square'; o.frequency.value = hz; g.gain.value = vol;
+        o.connect(g).connect(actx.destination); o.start(t); o.stop(t + ms / 1000);
+      }
+      t += ms / 1000;
+    }
+  } catch (e) { /* ไม่มีเสียงก็ใช้งานได้ */ }
+}
+const SND = {
+  click:[[2400,8]], confirm:[[1568,60],[2093,90]], btOn:[[784,80],[0,30],[1175,130]], btOff:[[1175,80],[0,30],[587,180]],
+  dtcNone:[[1047,70],[1568,120]], dtcFound:[[880,110],[0,70],[880,110],[0,70],[880,110]], cleared:[[1047,60],[1319,60],[1568,60],[2093,130]],
+  shift:[[2794,45],[0,35],[2794,45]], alert:[[1760,180],[1319,180],[1760,180],[1319,180]], toast:[[1319,60],[0,40],[1319,60]], swipe:[[1800,6]],
+};
+
+// =====================================================================
+//  SVG helpers
+// =====================================================================
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const R = (x,y,w,h,fill,ex='') => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${fill}" ${ex}/>`;
+const card = (x,y,w,h,ex='') => R(x,y,w,h,T.surf,`rx="4" ${T.cardLine ? `stroke="${T.cardLine}" stroke-width="1"` : ''} ${ex}`);
+const TX = (x,y,s,size,w,fill,anchor='start',ex='') =>
+  `<text x="${x}" y="${y}" font-size="${size}" font-weight="${w}" fill="${fill}" text-anchor="${anchor}" ${ex}>${esc(s)}</text>`;
+const HIT = (id,x,y,w,h) => `<rect data-hit="${id}" x="${x}" y="${y}" width="${w}" height="${h}" fill="${S.showHits ? 'rgba(0,160,255,.18)' : 'transparent'}" ${S.showHits ? 'stroke="#00A0FF" stroke-width=".5"' : ''}/>`;
+const pol = (cx,cy,r,deg) => { const a = deg * Math.PI / 180; return [cx + r * Math.cos(a), cy + r * Math.sin(a)]; };
+function arc(cx,cy,r,a0,a1,color,w,cap='butt') {
+  if (a1 - a0 < 0.3) return '';
+  const [x0,y0] = pol(cx,cy,r,a0), [x1,y1] = pol(cx,cy,r,a1);
+  return `<path d="M${x0.toFixed(2)} ${y0.toFixed(2)} A${r} ${r} 0 ${a1 - a0 > 180 ? 1 : 0} 1 ${x1.toFixed(2)} ${y1.toFixed(2)}" fill="none" stroke="${color}" stroke-width="${w}" stroke-linecap="${cap}"/>`;
+}
+const lvColor = l => l ? T[l] : T.muted;
+const pressed = id => S.press && S.press.hit === id && S.press.inside && !S.press.scrolling;
+const holdPct = id => pressed(id) ? Math.min(1, (performance.now() - S.press.t0) / 2000) : 0;
+const blink = (hz=1) => Math.floor(performance.now() / (500 / hz)) % 2 === 0;
+const live = () => S.link === 'CONNECTED';
+const val = k => live() ? S.v[k] : null;
+
+function holdButton(id, x, y, w, h, label, hint, danger) {
+  const p = holdPct(id);
+  const border = danger ? T.bad : T.line;
+  let s = R(x,y,w,h, danger ? T.bg : T.surf, `rx="4" stroke="${border}" stroke-width="${danger ? 1.5 : 1}"`);
+  if (p > 0) s += R(x + 1.5, y + 1.5, (w - 3) * p, h - 3, danger ? T.badSoft : T.track, 'rx="3"');
+  // ข้อความ + hint วางเป็นกลุ่มเดียวกลางปุ่ม (ประมาณความกว้างจากจำนวนตัวอักษร)
+  const cy = y + h / 2 + 4, lw = label.length * 8, hw = hint ? hint.length * 5.6 + 8 : 0, x0 = x + (w - lw - hw) / 2;
+  s += TX(x0, cy, label, 12, 700, danger ? T.bad : T.text, 'start', 'letter-spacing="1"');
+  if (hint) s += TX(x0 + lw + 8, cy, hint, 10, 600, T.muted);
+  return s + HIT(id, x, y, w, h);
+}
+function button(id, x, y, w, h, label, primary=false, enabled=true) {
+  if (!enabled) primary = false;  // ปุ่มที่กดไม่ได้ (เช่น RESCAN ระหว่างค้นหา) ไม่ใช้สี accent
+  const bg = primary ? T.accent : (pressed(id) && enabled ? T.track : T.surf);
+  let s = R(x,y,w,h,bg,`rx="4" ${primary ? '' : `stroke="${T.line}" stroke-width="1"`}`);
+  if (primary && pressed(id)) s += R(x,y,w,h,'#000','rx="4" opacity=".18"');
+  s += TX(x + w / 2, y + h / 2 + 4, label, 12, 700, primary ? T.onAccent : (enabled ? T.text : T.line), 'middle', 'letter-spacing="1"');
+  return s + (enabled ? HIT(id, x, y, w, h) : '');
+}
+
+// =====================================================================
+//  Chrome: status bar (0-22) and tab bar (208-240)
+// =====================================================================
+function statusBar() {
+  let s = R(0,0,320,22,T.bg) + R(0,22,320,1,T.line);
+  s += TX(8,15,'192.168.1.13',11,700,T.text);
+  const st = {CONNECTED:['BT CONNECTED',T.ok], CONNECTING:['CONNECTING',T.warn], WAITING:['BT CONNECTED',T.ok], DISCONNECTED:['BT DISCONNECTED',T.bad]}[S.link];
+  if (S.link === 'WAITING') s += TX(90,15,'WAITING FOR ECU',10,600,T.muted);
+  const w = st[0].length * 6.1 + 22, x = 314 - w;
+  s += R(x,3,w,16,T.surf,`rx="8" stroke="${st[1]}" stroke-width="1"`);
+  const dot = S.link === 'CONNECTING' && !blink() ? T.line : st[1];
+  s += `<circle cx="${x + 10}" cy="11" r="3" fill="${dot}"/>` + TX(x + 17,15,st[0],10,700,st[1]);
+  return s;
+}
+
+const TABS = [['drive','DRIVE'],['focus','FOCUS'],['trip','TRIP'],['fault','FAULT'],['set','']];
+function tabBar() {
+  let s = R(0,208,320,32,T.bar) + R(0,207,320,1,T.line);
+  TABS.forEach(([id,label], i) => {
+    const x = i * 64, active = S.page === id;
+    if (pressed('tab:' + id)) s += R(x,208,64,32,T.track);
+    if (active) s += R(x,208,64,3,T.accent);
+    const c = active ? T.text : T.muted;
+    if (id === 'set') {
+      s += `<circle cx="${x + 32}" cy="225" r="6.2" fill="none" stroke="${c}" stroke-width="3.2" stroke-dasharray="2.4 2.47"/>`
+         + `<circle cx="${x + 32}" cy="225" r="4.4" fill="none" stroke="${c}" stroke-width="1.8"/>`;
+    } else {
+      const n = id === 'fault' && S.dtc.state === 'done' ? S.dtc.codes.length : 0;
+      const off = n ? -9 : 0;
+      s += TX(x + 32 + off,229,label,11,700,c,'middle','letter-spacing="1"');
+      if (n) { s += R(x + 47,217,14,14,T.bad,'rx="7"') + TX(x + 54,228,n,10,700,T.onBad,'middle'); }
+    }
+    s += HIT('tab:' + id, x, 208, 64, 32);
+  });
+  return s;
+}
+
+// =====================================================================
+//  01 DRIVE
+// =====================================================================
+const G = {cx:160, cy:128, r:72, a0:135, sweep:270};
+const rpmAngle = r => G.a0 + G.sweep * Math.max(0, Math.min(1, r / 8000));
+
+function shiftLight() {
+  const rpm = val('rpm') ?? 0, start = S.cfg.shift - 1500, segs = 15, w = (308 - 2 * (segs - 1)) / segs;
+  const lit = Math.max(0, Math.min(segs, Math.ceil((rpm - start) / 1500 * segs)));
+  const flash = rpm >= S.cfg.shift;
+  let s = '';
+  for (let i = 0; i < segs; i++) {
+    let c = T.shiftOff;
+    if (flash) c = blink(4) ? T.bad : T.shiftOff;
+    else if (i < lit) c = i < 9 ? T.ok : i < 13 ? T.warn : T.bad;
+    s += R((6 + i * (w + 2)).toFixed(1), 26, w.toFixed(1), 5, c, 'rx="1"');
+  }
+  return s;
+}
+
+function driveTile(key, x, y, sub) {
+  const v = val(key), lv = level(key, v), st = S.stats[key];
+  let s = card(x,y,68,82) + TX(x + 7,y + 16,`${P[key].short} ${P[key].unit}`,10,600,T.muted);
+  const color = v == null ? T.muted : (lv === 'warn' || lv === 'bad' ? T[lv] : T.text);
+  s += TX(x + 7,y + 46,fmt(key, v),24,600,color);
+  // แนวโน้ม 5 วินาที: สามเหลี่ยมขึ้น/ลงเมื่อเปลี่ยนเกิน 2% ของสเกล
+  const h = S.hist[key];
+  if (v != null && h.length > 5) {
+    const d = v - h[h.length - 6], th = (P[key].hi - P[key].lo) * 0.02;
+    if (Math.abs(d) > th) {
+      const tx = x + 58, ty = y + 32;
+      s += `<path d="${d > 0 ? `M${tx - 4} ${ty + 3} L${tx + 4} ${ty + 3} L${tx} ${ty - 3}Z` : `M${tx - 4} ${ty - 3} L${tx + 4} ${ty - 3} L${tx} ${ty + 3}Z`}" fill="${T.muted}"/>`;
+    }
+  }
+  const f = v == null ? 0 : Math.max(0, Math.min(1, (v - P[key].lo) / (P[key].hi - P[key].lo)));
+  s += R(x + 7,y + 54,54,4,T.track,'rx="2"') + (f > 0 ? R(x + 7,y + 54,(54 * f).toFixed(1),4,lv ? T[lv] : T.text,'rx="2"') : '');
+  const sv = sub === 'max' ? st.max : st.min;
+  s += TX(x + 7,y + 73,`${sub.toUpperCase()} ${fmt(key, sv)}`,10,600,T.muted);
+  return s + HIT('tile:' + key, x, y, 68, 82);
+}
+
+function drivePage() {
+  const rpm = val('rpm'), speed = val('speed'), red = rpm != null && rpm >= RPM_RED;
+  let s = shiftLight();
+  s += driveTile('cool', 6, 36, 'max') + driveTile('volt', 6, 122, 'min');
+  s += driveTile('fuel', 246, 36, 'min') + driveTile('thr', 246, 122, 'max');
+
+  // มาตรวัดรอบ
+  const {cx,cy,r} = G;
+  s += arc(cx,cy,r,G.a0,G.a0 + G.sweep,T.track,10);
+  if (rpm != null) s += arc(cx,cy,r,G.a0,rpmAngle(rpm),red ? T.bad : T.accent,10);
+  s += arc(cx,cy,r + 9,rpmAngle(RPM_RED),G.a0 + G.sweep,T.bad,3);
+  for (let k = 0; k <= 8; k++) {
+    const a = rpmAngle(k * 1000), [x0,y0] = pol(cx,cy,r - 15,a), [x1,y1] = pol(cx,cy,r - 9,a);
+    s += `<line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}" stroke="${k >= 7 ? T.bad : T.muted}" stroke-width="1.5"/>`;
+    if (k % 2 === 0) { const [lx,ly] = pol(cx,cy,r + 19,a); s += TX(lx.toFixed(1),(ly + 4).toFixed(1),k,10,600,k >= 7 ? T.bad : T.muted,'middle'); }
+    else { const [mx,my] = pol(cx,cy,r - 20,a); s += `<circle cx="${mx}" cy="${my}" r=".8" fill="${T.line}"/>`; }
+  }
+  // peak marker: ขีดสั้นด้านนอกวงโค้ง
+  if (S.peakRpm > 0) {
+    const a = rpmAngle(S.peakRpm), [x0,y0] = pol(cx,cy,r + 4,a), [x1,y1] = pol(cx,cy,r - 6,a);
+    s += `<line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}" stroke="${T.text}" stroke-width="2.5" stroke-linecap="round"/>`;
+  }
+  // ความเร็ว + รอบ
+  s += TX(cx,140,speed == null ? '--' : Math.round(speed),50,600,speed == null ? T.muted : T.text,'middle','letter-spacing="-1"');
+  s += TX(cx,156,'km/h',11,600,T.muted,'middle');
+  const rt = rpm == null ? '--' : (Math.round(rpm / 10) * 10).toLocaleString('en-US');
+  s += TX(cx - 2,196,rt,18,700,rpm == null ? T.muted : red ? T.bad : T.rpmNormal,'end');
+  s += TX(cx + 3,196,'RPM',10,600,T.muted);
+  if (S.peakRpm > 0) s += TX(cx,174,`PEAK ${(Math.round(S.peakRpm / 10) * 10).toLocaleString('en-US')}`,10,600,T.muted,'middle');
+  // กดค้างล้าง peak: วงแหวนความคืบหน้ารอบตัวเลข
+  const hp = holdPct('gauge');
+  if (hp > 0.08) s += arc(cx,cy,r - 26,-90,-90 + 360 * hp - 0.01,T.accent,2);
+  return s + HIT('gauge', 80, 34, 160, 172);
+}
+
+// =====================================================================
+//  02 FOCUS: ค่าเดียวขนาดใหญ่ + สถิติ + กราฟ 60 วินาที
+// =====================================================================
+function focusPage() {
+  const key = S.focusKey, def = P[key], v = val(key), lv = level(key, v), st = S.stats[key];
+  let s = '';
+  s += button('fprev', 6, 28, 36, 24, '‹') + button('fnext', 278, 28, 36, 24, '›');
+  s += TX(160,45,def.name,12,700,T.text,'middle','letter-spacing="1"');
+  const idx = FOCUS_ORDER.indexOf(key);
+  FOCUS_ORDER.forEach((k, i) => { s += `<circle cx="${160 - 21 + i * 6}" cy="${53}" r="1.6" fill="${i === idx ? T.accent : T.line}"/>`; });
+
+  const color = v == null ? T.muted : (lv === 'warn' || lv === 'bad' ? T[lv] : T.text);
+  s += TX(10,106,fmt(key, v),50,600,color,'start','letter-spacing="-1"');
+  s += TX(12,120,def.unit,11,600,T.muted);
+  // สถิติ
+  s += card(204,60,110,48);
+  const avg = st.n ? st.sum / st.n : null;
+  [['MIN',st.min],['AVG',avg],['MAX',st.max]].forEach(([l,x], i) => {
+    s += TX(212,75 + i * 14,l,10,600,T.muted) + TX(306,75 + i * 14,fmt(key, x),11,700,T.text,'end');
+  });
+  // กราฟ
+  const gx = 6, gy = 126, gw = 308, gh = 52;
+  s += card(gx,gy,gw,gh);
+  const lo = def.lo, hi = def.hi, h = S.hist[key];
+  const yOf = x => gy + gh - 5 - (gh - 10) * Math.max(0, Math.min(1, (x - lo) / (hi - lo)));
+  if (key === 'cool') {
+    const ly = yOf(S.cfg.coolLimit);
+    s += `<line x1="${gx + 4}" y1="${ly}" x2="${gx + gw - 4}" y2="${ly}" stroke="${T.bad}" stroke-width="1" stroke-dasharray="3 3"/>`;
+  }
+  if (key === 'rpm') {
+    const ly = yOf(RPM_RED);
+    s += `<line x1="${gx + 4}" y1="${ly}" x2="${gx + gw - 4}" y2="${ly}" stroke="${T.bad}" stroke-width="1" stroke-dasharray="3 3"/>`;
+  }
+  if (h.length > 1) {
+    const step = (gw - 8) / 59, x0 = gx + gw - 4 - (h.length - 1) * step;
+    const pts = h.map((x, i) => `${(x0 + i * step).toFixed(1)},${yOf(x).toFixed(1)}`).join(' ');
+    s += `<polyline points="${pts}" fill="none" stroke="${lv && lv !== 'ok' ? T[lv] : T.accent}" stroke-width="1.6" stroke-linejoin="round"/>`;
+    const [lx,ly] = pts.split(' ').pop().split(',');
+    s += `<circle cx="${lx}" cy="${ly}" r="2.2" fill="${T.accent}"/>`;
+  }
+  s += TX(gx + 6,gy + 13,fmt(key, hi),10,600,T.muted) + TX(gx + 6,gy + gh - 4,fmt(key, lo),10,600,T.muted);
+  s += TX(6,196,'−60 s',10,600,T.muted) + TX(204,196,'NOW',10,600,T.muted,'end');
+  s += holdButton('freset', 214, 182, 100, 22, 'RESET', '', false);
+  return s;
+}
+
+// =====================================================================
+//  03 TRIP + จับเวลา 0-100
+// =====================================================================
+function fmtTime(sec) {
+  const m = Math.floor(sec / 60), h = Math.floor(m / 60);
+  return h ? `${h}:${String(m % 60).padStart(2,'0')}:${String(Math.floor(sec % 60)).padStart(2,'0')}` : `${m}:${String(Math.floor(sec % 60)).padStart(2,'0')}`;
+}
+function tripPage() {
+  const t = S.trip, z = S.zero;
+  const avg = t.move > 5 ? t.dist / (t.move / 3600) : null;
+  const items = [
+    ['TIME', fmtTime(t.time), ''], ['DIST', t.dist.toFixed(1), 'km'],
+    ['AVG', avg == null ? '--' : Math.round(avg), 'km/h'], ['MAX', Math.round(t.maxSpeed), 'km/h'],
+    ['MAX RPM', (Math.round(t.maxRpm / 10) * 10).toLocaleString('en-US'), ''], ['MOVING', fmtTime(t.move), ''],
+  ];
+  let s = '';
+  items.forEach(([l,v,u], i) => {
+    const x = 6 + (i % 2) * 97, y = 28 + Math.floor(i / 2) * 50;
+    s += card(x,y,93,46) + TX(x + 7,y + 15,l,10,600,T.muted);
+    s += TX(x + 7,y + 38,v,20,700,T.text);
+    if (u) s += TX(x + 86,y + 38,u,10,600,T.muted,'end');
+  });
+  s += holdButton('treset', 6, 180, 190, 24, 'RESET TRIP', 'HOLD 2s', true);
+
+  // 0-100 card
+  const x = 200, y = 28, w = 114, h = 176;
+  s += card(x,y,w,h) + TX(x + 8,y + 15,'0–100 km/h',10,600,T.muted);
+  const now = performance.now();
+  let big = '--.-', color = T.muted, stLabel = 'OFF', stColor = T.muted;
+  if (z.st === 'armed') { stLabel = 'STOP FIRST'; stColor = T.warn; }
+  if (z.st === 'ready') { stLabel = 'READY'; stColor = T.ok; big = '0.0'; color = T.text; }
+  if (z.st === 'run')   { stLabel = 'GO'; stColor = T.accent; big = ((now - z.t0) / 1000).toFixed(1); color = T.accent; }
+  if (z.st === 'done')  { stLabel = 'RESULT'; stColor = T.ok; big = z.result.toFixed(1); color = T.text; }
+  s += R(x + 8,y + 22,w - 16,16,z.st === 'ready' && blink() ? T.accentSoft : T.track,'rx="2"');
+  s += TX(x + w / 2,y + 34,stLabel,10,700,stColor,'middle','letter-spacing="1"');
+  s += TX(x + w / 2 + 6,y + 78,big,30,700,color,'middle') + TX(x + w - 8,y + 92,'s',10,600,T.muted,'end');
+  const sp = val('speed') ?? 0;
+  s += R(x + 8,y + 100,w - 16,4,T.track,'rx="2"') + R(x + 8,y + 100,((w - 16) * Math.min(1, sp / 100)).toFixed(1),4,T.accent,'rx="2"');
+  s += TX(x + 8,y + 120,'BEST',10,600,T.muted) + TX(x + w - 8,y + 120,z.best == null ? '--' : z.best.toFixed(1) + ' s',11,700,T.text,'end');
+  s += button('zarm', x + 8, y + 136, w - 16, 32, z.st === 'off' || z.st === 'done' ? 'ARM' : 'CANCEL', z.st === 'off' || z.st === 'done');
+  return s;
+}
+
+// =====================================================================
+//  04 FAULT (โครงเดียวกับ v3)
+// =====================================================================
+const DTC_DEMO = [
+  ['P0301','Cylinder 1 misfire','สูบ 1 จุดระเบิดไม่สมบูรณ์'],
+  ['P0420','Catalyst efficiency B1','แคตาไลติกประสิทธิภาพต่ำ'],
+  ['P0171','Mixture too lean B1','ส่วนผสมบางเกินไป'],
+  ['P0133','O2 sensor slow B1S1','เซ็นเซอร์ออกซิเจน B1S1 ตอบสนองช้า'],
+];
+function faultPage() {
+  const d = S.dtc;
+  let s = '';
+  const pages = Math.max(1, Math.ceil(d.codes.length / 3));
+  if (d.state === 'done' && d.codes.length) {
+    s += TX(8,46,d.codes.length,20,700,T.bad) + TX(24,46,'Fault codes',11,600,T.text);
+    let right = 312;
+    if (pages > 1) {
+      s += button('dprev', 238, 28, 24, 22, '‹', false, d.page > 0) + button('dnext', 288, 28, 24, 22, '›', false, d.page < pages - 1);
+      s += TX(275,43,`${d.page + 1}/${pages}`,10,600,T.muted,'middle');
+      right = 232;
+    }
+    if (d.mil) s += R(right - 50,31,50,16,T.accent,'rx="2"') + TX(right - 25,42,'MIL ON',10,700,T.onAccent,'middle');
+    d.codes.slice(d.page * 3, d.page * 3 + 3).forEach(([c,en,th], k) => {
+      const y = 53 + k * 37;
+      s += card(6,y,308,34) + R(6,y,3,34,c.startsWith('P03') ? T.bad : T.warn);
+      s += TX(17,y + 22,c,14,700,T.text) + TX(83,y + 14,en,11,600,T.text) + TX(83,y + 27,th,10,600,T.muted);
+    });
+  } else {
+    const msg = {idle:['Press READ to scan fault codes',T.muted], busy:['Working ...',T.warn], done:['No fault codes stored',T.ok], nolink:['Not connected to the OBD adapter',T.bad]}[d.state];
+    s += TX(8,44,msg[0],11,600,msg[1]);
+    if (d.state === 'busy') { const p = (performance.now() / 1200) % 1; s += R(8,52,304,3,T.track,'rx="1.5"') + R(8 + 260 * p,52,44,3,T.warn,'rx="1.5"'); }
+  }
+  s += button('dread', 6, 170, 86, 34, 'READ');
+  s += holdButton('dclear', 98, 170, 216, 34, 'CLEAR', 'HOLD 2s', true);
+  return s;
+}
+
+// =====================================================================
+//  05 SET: รายการเลื่อนได้ (ลากขึ้น/ลง)
+// =====================================================================
+const SET_TOP = 24, SET_H = 183, ROW = 31;
+const SET_ROWS = ['adapter','pin','connect','theme','bl','sound','shift','cool','recal','fw'];
+function setPage() {
+  const c = S.cfg, maxScroll = Math.max(0, SET_ROWS.length * ROW + 8 - SET_H);
+  S.cfgScroll = Math.max(0, Math.min(maxScroll, S.cfgScroll));
+  let s = `<clipPath id="setclip"><rect x="0" y="${SET_TOP}" width="320" height="${SET_H}"/></clipPath><g clip-path="url(#setclip)">`;
+  let y = SET_TOP + 4 - S.cfgScroll;
+  const label = (t, yy) => TX(14,yy + 20,t,11,600,T.muted);
+  const stepper = (id, value, yy) => {
+    let r = button(id + '-', 186, yy + 4, 28, 23, '−') + button(id + '+', 280, yy + 4, 28, 23, '+');
+    return r + TX(247,yy + 20,value,12,700,T.text,'middle');
+  };
+  const seg = (id, opts, cur, yy, w) => {
+    let r = R(308 - opts.length * w - 4,yy + 5,opts.length * w + 4,21,T.track,'rx="3"');
+    opts.forEach((o, i) => {
+      const x = 308 - opts.length * w - 2 + i * w;
+      if (i === cur) r += R(x,yy + 7,w,17,T.surf,'rx="2"');
+      r += TX(x + w / 2,yy + 19,o,10,700,i === cur ? T.text : T.muted,'middle') + HIT(`${id}:${i}`, x, yy, w, ROW);
+    });
+    return r;
+  };
+  for (const row of SET_ROWS) {
+    const bgPressed = pressed('row:' + row) ? T.track : T.surf;
+    if (row !== 'connect' && row !== 'recal') s += R(6,y,308,ROW - 1,bgPressed,'rx="3"');
+    switch (row) {
+      case 'adapter': s += label('Adapter',y) + TX(296,y + 20,c.adapter,12,700,T.text,'end') + TX(306,y + 20,'›',14,700,T.muted,'end') + HIT('row:adapter',6,y,308,ROW); break;
+      case 'pin': s += label('PIN',y) + TX(296,y + 20,'•'.repeat(c.pin.length),12,700,T.text,'end') + TX(306,y + 20,'›',14,700,T.muted,'end') + HIT('row:pin',6,y,308,ROW); break;
+      case 'connect': s += button('connect', 6, y, 308, ROW - 2, 'CONNECT', true); break;
+      case 'theme': s += label('Theme',y) + seg('theme', ['DARK','LIGHT','AUTO'], ['DARK','LIGHT','AUTO'].indexOf(c.theme), y, 44); break;
+      case 'bl': {
+        s += label('Backlight',y);
+        const x0 = 92, w = 172, f = (c.bl - 10) / 90;
+        s += R(x0,y + 14,w,4,T.track,'rx="2"') + R(x0,y + 14,w * f,4,T.accent,'rx="2"');
+        s += `<circle cx="${x0 + w * f}" cy="${y + 16}" r="7" fill="${T.knob}" stroke="${T.line}" stroke-width="1"/>`;
+        s += TX(306,y + 20,c.bl + '%',12,700,T.text,'end') + HIT('bl', 84, y, 188, ROW);
+        break;
+      }
+      case 'sound': s += label('Sound',y) + seg('sound', ['OFF','LOW','MID','HIGH'], c.sound, y, 38); break;
+      case 'shift': s += label('Shift light',y) + stepper('shift', c.shift.toLocaleString('en-US'), y); break;
+      case 'cool': s += label('Overheat °C',y) + stepper('coolLim', c.coolLimit, y); break;
+      case 'recal': s += holdButton('recal', 6, y, 308, ROW - 2, 'RECALIBRATE TOUCH', 'HOLD 2s', false); break;
+      case 'fw': s += label('Firmware',y) + TX(306,y + 20,'v2.0.0',12,700,T.text,'end'); break;
+    }
+    y += ROW;
+  }
+  s += '</g>';
+  // scrollbar
+  if (maxScroll > 0) {
+    const th = SET_H * SET_H / (SET_H + maxScroll), ty = SET_TOP + (SET_H - th) * (S.cfgScroll / maxScroll);
+    s += R(316,ty.toFixed(1),2.5,th.toFixed(1),T.muted,'rx="1.25" opacity=".7"');
+  }
+  return s + HIT('setlist', 0, SET_TOP, 320, SET_H).replace('data-hit="setlist"', 'data-hit="setlist" data-under="1"');
+}
+
+// =====================================================================
+//  SCAN (เปิดจากแถว Adapter)
+// =====================================================================
+const SCAN_DEVICES = [
+  {name:'OBDII', mac:'00:1D:A5:68:98:8B', rssi:-58, obd:true},
+  {name:'Vgate iCar Pro', mac:'AA:BB:CC:11:22:33', rssi:-71, obd:true},
+  {name:'JBL Flip 5', mac:'F8:DF:15:20:44:10', rssi:-66, obd:false},
+  {name:'Galaxy Buds', mac:'4C:BC:98:72:1E:05', rssi:-80, obd:false},
+];
+function scanPage() {
+  const sc = S.scan, el = (performance.now() - sc.t0) / 1000, busy = el < 10;
+  let s = R(0,0,320,22,T.bg) + R(0,22,320,1,T.line) + TX(8,15,'SELECT ADAPTER',11,700,T.text,'start','letter-spacing="1"');
+  s += TX(312,15,busy ? `SCANNING ${Math.ceil(10 - el)}s` : `${SCAN_DEVICES.length} FOUND`,10,600,busy ? T.warn : T.ok,'end');
+  if (busy) s += R(0,22,320 * el / 10,2,T.accent);
+  const shown = SCAN_DEVICES.slice(0, busy ? Math.min(4, Math.floor(el / 2)) : 4);
+  shown.forEach((d, k) => {
+    const y = 30 + k * 36, id = 'dev:' + k;
+    s += R(6,y,308,32,pressed(id) ? T.track : T.surf,`rx="4" ${T.cardLine ? `stroke="${T.cardLine}"` : ''}`);
+    const bars = d.rssi > -60 ? 4 : d.rssi > -70 ? 3 : d.rssi > -80 ? 2 : 1;
+    for (let b = 0; b < 4; b++) s += R(14 + b * 5, y + 22 - (b + 1) * 4, 3, (b + 1) * 4, b < bars ? T.text : T.line);
+    s += TX(40,y + 14,d.name,12,700,T.text) + TX(40,y + 27,d.mac,10,600,T.muted);
+    if (d.obd) s += R(262,y + 9,44,15,T.accent,'rx="2"') + TX(284,y + 20,d.name === S.cfg.adapter ? 'SAVED' : 'OBD',10,700,T.onAccent,'middle');
+    s += HIT(id, 6, y, 308, 32);
+  });
+  s += R(0,207,320,33,T.bar) + R(0,207,320,1,T.line);
+  s += button('scanBack', 4, 211, 70, 26, 'BACK') + button('scanManual', 166, 211, 70, 26, 'MANUAL') + button('scanRescan', 240, 211, 76, 26, 'RESCAN', true, !busy);
+  return s;
+}
+
+// =====================================================================
+//  Toast & ALERT
+// =====================================================================
+function toastView() {
+  const t = S.toast;
+  if (!t) return '';
+  const age = performance.now() - t.at;
+  if (age > 4000) { S.toast = null; return ''; }
+  const dy = Math.min(1, age / 180) * 28 - 28 + (age > 3700 ? -(age - 3700) / 300 * 28 : 0);
+  const y = 34 + dy;
+  let s = `<g opacity="${age > 3700 ? 1 - (age - 3700) / 300 : 1}">`;
+  s += R(6,y,308,24,T.surf,`rx="4" stroke="${T[t.kind]}" stroke-width="1"`) + R(6,y,4,24,T[t.kind],'rx="2"');
+  s += TX(18,y + 16,t.text,11,700,T[t.kind]) + TX(306,y + 16,t.sub || '',10,600,T.muted,'end');
+  return s + HIT('toast', 6, y, 308, 24) + '</g>';
+}
+function alertView() {
+  const ph = blink(), bg = ph ? T.alertA : T.alertB, fg = T.alertFg, v = val('cool');
+  let s = R(0,0,320,240,bg);
+  s += `<path d="M160 36 L176 63 L144 63 Z" fill="none" stroke="${fg}" stroke-width="3" stroke-linejoin="round"/>` + R(158.5,45,3,9,fg) + R(158.5,56,3,3,fg);
+  s += TX(160,98,'OVERHEAT',30,700,fg,'middle','letter-spacing="2"');
+  s += TX(142,130,'COOLANT',11,700,fg,'end') + TX(148,130,`${v == null ? '--' : Math.round(v)}°C`,24,700,fg);
+  s += TX(160,155,'ลดความเร็ว และจอดพักเครื่องยนต์',12,600,fg,'middle');
+  s += R(96,170,128,36,T.alertBtnBg,'rx="4"') + TX(160,193,'แตะเพื่อรับทราบ',12,700,T.alertBtnFg,'middle');
+  return s + HIT('ack', 0, 0, 320, 240);
+}
+
+// =====================================================================
+//  Render
+// =====================================================================
+const svg = document.getElementById('screen');
+function render() {
+  let s = R(0,0,320,240,T.bg);
+  if (S.alert) s = alertView();
+  else if (S.scan) s += scanPage();
+  else {
+    s += statusBar();
+    s += {drive:drivePage, focus:focusPage, trip:tripPage, fault:faultPage, set:setPage}[S.page]();
+    s += tabBar() + toastView();
+  }
+  svg.innerHTML = s;
+  svg.style.filter = `brightness(${0.55 + 0.45 * S.cfg.bl / 100})`;
+  renderSide();
+}
+function renderSide() {
+  const st = document.getElementById('state'), v = S.v;
+  const rows = [['หน้า', S.scan ? 'SCAN' : S.alert ? 'ALERT' : S.page.toUpperCase()], ['ลิงก์', S.link], ['รอบ / ความเร็ว', `${Math.round(v.rpm)} rpm · ${Math.round(v.speed)} km/h`],
+    ['น้ำ / แบต', `${Math.round(v.cool)} °C · ${v.volt.toFixed(1)} V`], ['0–100', S.zero.st], ['ธีม', `${S.cfg.theme} → ${T === THEMES.LIGHT ? 'LIGHT' : 'DARK'}`]];
+  st.innerHTML = rows.map(([a,b]) => `<span>${a}</span><span>${b}</span>`).join('');
+}
+
+// =====================================================================
+//  Touch / mouse
+// =====================================================================
+function toScreen(e) {
+  const r = svg.getBoundingClientRect();
+  return [(e.clientX - r.left) * 320 / r.width, (e.clientY - r.top) * 240 / r.height];
+}
+function hitAt(x, y) {
+  // หา hit ที่อยู่บนสุดตามพิกัด (ไม่พึ่ง DOM เพราะวาดใหม่ทุกเฟรม)
+  const els = [...svg.querySelectorAll('[data-hit]')].reverse();
+  for (const el of els) {
+    const ex = +el.getAttribute('x'), ey = +el.getAttribute('y'), ew = +el.getAttribute('width'), eh = +el.getAttribute('height');
+    if (el.dataset.under) continue;
+    if (x >= ex && x < ex + ew && y >= ey && y < ey + eh) return el.dataset.hit;
+  }
+  return null;
+}
+svg.addEventListener('pointerdown', e => {
+  svg.setPointerCapture(e.pointerId);
+  const [x, y] = toScreen(e);
+  const hit = hitAt(x, y);
+  S.press = {hit, x0:x, y0:y, x, y, t0:performance.now(), inside:true, scrolling:false, scroll0:S.cfgScroll, bl0:S.cfg.bl, fired:false};
+  if (S.alert) { ackAlert(); S.press = null; return; }
+  if (hit && hit !== 'setlist') beep(SND.click);
+  if (hit === 'bl') setBacklight(x);
+});
+svg.addEventListener('pointermove', e => {
+  if (!S.press) return;
+  const [x, y] = toScreen(e), p = S.press;
+  p.x = x; p.y = y;
+  // แถบเลื่อนความสว่าง: ลากแนวตั้งชัดเจน = เลื่อนรายการแทน (คืนค่าความสว่างเดิม)
+  if (p.hit === 'bl' && Math.abs(y - p.y0) > 12 && Math.abs(y - p.y0) > Math.abs(x - p.x0)) { S.cfg.bl = p.bl0; p.hit = null; }
+  if (p.hit === 'bl') { setBacklight(x); return; }
+  if (S.page === 'set' && !S.scan && Math.abs(y - p.y0) > 8) p.scrolling = true;
+  if (p.scrolling) { S.cfgScroll = p.scroll0 - (y - p.y0); return; }
+  p.inside = hitAt(x, y) === p.hit;
+});
+svg.addEventListener('pointerup', e => {
+  const p = S.press;
+  S.press = null;
+  if (!p) return;
+  const [x, y] = toScreen(e), dx = x - p.x0, dy = y - p.y0, dt = performance.now() - p.t0;
+  if (p.hit === 'bl') { log(`backlight ${S.cfg.bl}% (บันทึกแยกตามธีม)`); return; }
+  if (p.scrolling) return;
+  // ปัดซ้าย/ขวา: เกิน 50 px, แนวนอนชัดเจน, ภายใน 700 ms, เริ่มในพื้นที่เนื้อหา
+  if (!S.scan && SWIPE_PAGES.includes(S.page) && Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5 && dt < 700 && p.y0 > 24 && p.y0 < 207) {
+    const i = SWIPE_PAGES.indexOf(S.page), n = SWIPE_PAGES[(i + (dx < 0 ? 1 : SWIPE_PAGES.length - 1)) % SWIPE_PAGES.length];
+    go(n, `swipe ${dx < 0 ? 'left' : 'right'}`);
+    beep(SND.swipe);
+    return;
+  }
+  if (p.fired || !p.hit || hitAt(x, y) !== p.hit) return;
+  activate(p.hit);
+});
+
+function setBacklight(x) {
+  S.cfg.bl = Math.round(Math.max(10, Math.min(100, 10 + (x - 92) / 172 * 90)));
+}
+
+function go(page, why) {
+  if (S.page === page) return;
+  S.page = page;
+  log(`page → ${page.toUpperCase()}${why ? ` (${why})` : ''}`);
+}
+
+function activate(hit) {
+  const [kind, arg] = hit.split(':');
+  switch (kind) {
+    case 'tab': go(arg); break;
+    case 'tile': S.focusKey = arg; go('focus', `tap ${arg}`); break;
+    case 'gauge': S.focusKey = 'rpm'; go('focus', 'tap gauge'); break;
+    case 'fprev': case 'fnext': {
+      const i = FOCUS_ORDER.indexOf(S.focusKey);
+      S.focusKey = FOCUS_ORDER[(i + (kind === 'fnext' ? 1 : FOCUS_ORDER.length - 1)) % FOCUS_ORDER.length];
+      break;
+    }
+    case 'zarm': {
+      const z = S.zero;
+      if (z.st === 'off' || z.st === 'done') { z.st = (val('speed') ?? 1) < 0.5 ? 'ready' : 'armed'; log('0–100 armed'); }
+      else { z.st = 'off'; log('0–100 cancelled'); }
+      break;
+    }
+    case 'dread': readDtc(); break;
+    case 'dprev': S.dtc.page = Math.max(0, S.dtc.page - 1); break;
+    case 'dnext': S.dtc.page++; break;
+    case 'row':
+      if (arg === 'adapter') { S.scan = {t0:performance.now()}; log('SCAN opened: OBD task stops connecting, Bluetooth inquiry ~10 s'); }
+      if (arg === 'pin') log('open on-screen keyboard (PIN) — unchanged from v3');
+      break;
+    case 'connect': reconnect('CONNECT'); break;
+    case 'theme': setTheme(['DARK','LIGHT','AUTO'][+arg]); break;
+    case 'sound': S.cfg.sound = +arg; beep(SND.confirm); log(`sound ${['OFF','LOW','MID','HIGH'][+arg]}`); break;
+    case 'shift-': case 'shift+': S.cfg.shift = Math.max(3000, Math.min(7500, S.cfg.shift + (kind.endsWith('+') ? 250 : -250))); break;
+    case 'coolLim-': case 'coolLim+': S.cfg.coolLimit = Math.max(95, Math.min(115, S.cfg.coolLimit + (kind.endsWith('+') ? 1 : -1))); break;
+    case 'toast': S.toast = null; break;
+    case 'dev': S.cfg.adapter = SCAN_DEVICES[+arg].name; S.scan = null; log(`selected ${S.cfg.adapter}: save name + MAC, reconnect`); reconnect(); break;
+    case 'scanBack': S.scan = null; break;
+    case 'scanManual': S.scan = null; log('open keyboard (adapter name / MAC)'); break;
+    case 'scanRescan': S.scan = {t0:performance.now()}; break;
+  }
+}
+
+// กดค้างครบ 2 วินาที
+function checkHolds() {
+  const p = S.press;
+  if (!p || p.fired || !p.inside || p.scrolling || performance.now() - p.t0 < 2000) return;
+  const done = () => { p.fired = true; beep(SND.confirm); };
+  switch (p.hit) {
+    case 'gauge': done(); S.peakRpm = 0; log('peak RPM cleared'); break;
+    case 'freset': done(); S.stats[S.focusKey] = {min:null,max:null,sum:0,n:0}; log(`${S.focusKey} MIN/AVG/MAX reset`); break;
+    case 'treset': done(); S.trip = {time:0,dist:0,move:0,maxSpeed:0,maxRpm:0}; log('trip reset'); break;
+    case 'dclear': done(); clearDtc(); break;
+    case 'recal': done(); log('start touch calibration (4 corners)'); break;
+  }
+}
+
+function setTheme(mode) {
+  S.cfg.theme = mode;
+  T = mode === 'LIGHT' ? THEMES.LIGHT : mode === 'DARK' ? THEMES.DARK : (new Date().getHours() >= 6 && new Date().getHours() < 18 ? THEMES.LIGHT : THEMES.DARK);
+  S.cfg.bl = T === THEMES.LIGHT ? 95 : 70;
+  log(`theme ${mode} (redraw all static chrome)`);
+}
+
+function readDtc() {
+  if (!live()) { S.dtc.state = 'nolink'; beep([[330,250]]); return; }
+  S.dtc.state = 'busy'; log('DTC read: 0101 → 03');
+  setTimeout(() => {
+    S.dtc = {state:'done', codes:S.sim === 'clean' ? [] : DTC_DEMO, mil:true, page:0};
+    beep(S.dtc.codes.length ? SND.dtcFound : SND.dtcNone);
+  }, 1400);
+}
+function clearDtc() {
+  if (!live()) { S.dtc.state = 'nolink'; return; }
+  S.dtc.state = 'busy'; log('DTC clear: 04 → read again');
+  setTimeout(() => { S.dtc = {state:'done', codes:[], mil:false, page:0}; beep(SND.cleared); toast('ok','CODES CLEARED','MIL OFF'); }, 1400);
+}
+
+function toast(kind, text, sub) {
+  S.toast = {kind, text, sub, at:performance.now()};
+  beep(SND.toast);
+  log(`toast: ${text}`);
+}
+
+function reconnect(why) {
+  setLink('CONNECTING');
+  setTimeout(() => setLink('WAITING'), 1500);
+  setTimeout(() => setLink('CONNECTED'), 2600);
+  if (why) log(`${why}: reconnect Bluetooth`);
+}
+function setLink(l) {
+  const was = S.link;
+  S.link = l;
+  if (was === 'CONNECTED' && l !== 'CONNECTED') { beep(SND.btOff); if (l === 'DISCONNECTED') toast('bad','OBD LINK LOST','RETRY 4 s'); }
+  if (l === 'CONNECTED' && was !== 'CONNECTED') beep(SND.btOn);
+}
+
+function ackAlert() {
+  S.alert = false;
+  log('overheat acknowledged');
+}
+
+// =====================================================================
+//  Simulation (ค่าจำลอง 10 ครั้ง/วินาที)
+// =====================================================================
+const SCENARIOS = [
+  ['idle','จอดติดเครื่อง'], ['city','ขับในเมือง'], ['launch','ออกตัว 0–100'], ['redline','เร่งรอบสูง'],
+  ['overheat','น้ำร้อนเกิน'], ['lowbatt','แบตต่ำ'], ['lowfuel','น้ำมันใกล้หมด'], ['disconnect','สัญญาณหลุด'], ['clean','รถไม่มี DTC'],
+];
+const RATIO = [0,118,68,47,36,29,24];
+let gear = 1;
+function simStep(dt) {
+  const v = S.v, sim = S.sim;
+  S.simT += dt;
+  const t = S.simT;
+  let thr = 0;
+  if (sim === 'city' || sim === 'lowbatt' || sim === 'lowfuel' || sim === 'overheat' || sim === 'clean') {
+    const target = Math.max(0, 45 + 35 * Math.sin(t / 7) + 10 * Math.sin(t / 2.3));
+    thr = Math.max(0, Math.min(70, (target - v.speed) * 4 + 12));
+    v.speed += ((thr - 14) * 0.09 - (target < v.speed ? 2.5 : 0)) * dt * 3;
+  } else if (sim === 'launch') {
+    if (t > 2 && v.speed < 120) thr = 100;
+    v.speed += thr ? (14 - v.speed * 0.05) * dt : -6 * dt;
+  } else if (sim === 'redline') {
+    thr = (t % 6) < 3.5 ? 100 : 0;
+    gear = 2;
+    v.speed += thr ? 6 * dt : -4 * dt;
+    v.speed = Math.max(20, Math.min(110, v.speed));
+  } else {
+    v.speed -= 8 * dt;
+  }
+  v.speed = Math.max(0, v.speed);
+  if (sim !== 'redline') {
+    if (v.speed * RATIO[gear] > 6200 && gear < 6) gear++;
+    while (gear > 1 && v.speed * RATIO[gear - 1] < 2000) gear--;
+  }
+  const rpmTarget = v.speed < 2 ? 780 + 30 * Math.sin(t * 3) + thr * 15 : Math.max(900, v.speed * RATIO[gear]);
+  v.rpm += (rpmTarget - v.rpm) * Math.min(1, dt * 6);
+  v.rpm = Math.min(7600, v.rpm);
+  v.thr += (thr - v.thr) * Math.min(1, dt * 8);
+  v.load = 18 + v.thr * 0.72;
+  const coolTarget = sim === 'overheat' ? 112 : 90 + v.thr * 0.02;
+  v.cool += (coolTarget - v.cool) * dt * (sim === 'overheat' ? 0.06 : 0.02);
+  v.volt += ((sim === 'lowbatt' ? 11.9 : 14.1) - v.volt) * dt * 0.3;
+  if (sim === 'lowfuel') v.fuel = Math.max(6, v.fuel - dt * 2.5);
+  v.iat += (34 + v.speed * 0.02 - v.iat) * dt * 0.05;
+}
+
+let wasLow = {volt:false, fuel:false}, shiftBeeped = false;
+function tick() {
+  const now = performance.now(), dt = 0.1;
+  if (S.link !== 'DISCONNECTED') simStep(dt);
+  const on = live();
+  if (on) {
+    for (const k of Object.keys(P)) {
+      const st = S.stats[k], x = S.v[k];
+      st.min = st.min == null ? x : Math.min(st.min, x);
+      st.max = st.max == null ? x : Math.max(st.max, x);
+      st.sum += x; st.n++;
+    }
+    S.peakRpm = Math.max(S.peakRpm, S.v.rpm);
+    const t = S.trip;
+    t.time += dt;
+    if (S.v.speed > 1) t.move += dt;
+    t.dist += S.v.speed * dt / 3600;
+    t.maxSpeed = Math.max(t.maxSpeed, S.v.speed);
+    t.maxRpm = Math.max(t.maxRpm, S.v.rpm);
+    if (now - S.lastHist >= 1000) {
+      S.lastHist = now;
+      for (const k of Object.keys(P)) { S.hist[k].push(S.v[k]); if (S.hist[k].length > 60) S.hist[k].shift(); }
+    }
+    // 0-100
+    const z = S.zero, sp = S.v.speed;
+    if (z.st === 'armed' && sp < 0.5) z.st = 'ready';
+    if (z.st === 'ready' && sp > 0.5) { z.st = 'run'; z.t0 = now; log('0–100 timer started (speed > 0)'); }
+    if (z.st === 'run' && sp >= 100) {
+      z.st = 'done'; z.result = (now - z.t0) / 1000; z.best = z.best == null ? z.result : Math.min(z.best, z.result);
+      beep(SND.confirm); toast('ok', `0–100 IN ${z.result.toFixed(1)} s`, z.best === z.result ? 'NEW BEST' : `BEST ${z.best.toFixed(1)}`);
+    }
+    // เตือน
+    if (S.v.rpm >= S.cfg.shift && !shiftBeeped) { shiftBeeped = true; beep(SND.shift); }
+    if (S.v.rpm < S.cfg.shift - 300) shiftBeeped = false;
+    const lowV = S.v.volt < 12.2, lowF = S.v.fuel < 10;
+    if (lowV && !wasLow.volt) toast('warn', 'BATTERY LOW', `${S.v.volt.toFixed(1)} V`);
+    if (lowF && !wasLow.fuel) toast('warn', 'FUEL LOW', `${Math.round(S.v.fuel)} %`);
+    wasLow = {volt:lowV, fuel:lowF};
+    if (S.v.cool < S.cfg.coolLimit - 3) S.alertArmed = true;
+    if (S.alertArmed && S.v.cool >= S.cfg.coolLimit && !S.alert) { S.alert = true; S.alertArmed = false; log('OVERHEAT overlay'); }
+  }
+  if (S.alert && Math.floor(now / 1400) !== Math.floor((now - 100) / 1400)) beep(SND.alert);
+}
+
+function setScenario(id) {
+  const prev = S.sim;
+  S.sim = id; S.simT = 0;
+  document.querySelectorAll('#scenarios button').forEach(b => b.classList.toggle('on', b.dataset.sim === id));
+  if (id === 'disconnect') {
+    setLink('DISCONNECTED');
+    setTimeout(() => { if (S.sim === 'disconnect') { S.sim = 'idle'; reconnect('auto retry'); setScenario('idle'); } }, 5000);
+    return;
+  }
+  if (prev === 'disconnect' && S.link !== 'CONNECTED') reconnect();
+  if (id === 'launch') { S.v.speed = 0; gear = 1; S.zero.st = 'ready'; S.page = 'trip'; log('scenario: launch (0–100 armed, page TRIP)'); return; }
+  if (id === 'overheat') S.v.cool = Math.max(S.v.cool, 100);
+  if (id === 'lowfuel') S.v.fuel = 14;
+  if (id !== 'lowfuel' && S.v.fuel < 20) S.v.fuel = 62;
+  if (id !== 'overheat' && S.v.cool > 100) S.v.cool = 92;
+  log(`scenario: ${id}`);
+}
+
+document.getElementById('scenarios').innerHTML = SCENARIOS.map(([id,l]) => `<button class="ctl" data-sim="${id}">${l}</button>`).join('');
+document.getElementById('scenarios').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setScenario(b.dataset.sim); });
+document.querySelectorAll('[data-scale]').forEach(b => b.addEventListener('click', () => {
+  S.scale = +b.dataset.scale;
+  svg.setAttribute('width', 320 * S.scale); svg.setAttribute('height', 240 * S.scale);
+  document.querySelectorAll('[data-scale]').forEach(x => x.classList.toggle('on', x === b));
+}));
+document.querySelector('[data-scale="2"]').classList.add('on');
+document.getElementById('showHits').addEventListener('change', e => { S.showHits = e.target.checked; });
+
+setScenario('city');
+setInterval(() => { tick(); checkHolds(); }, 100);
+(function frame() { render(); requestAnimationFrame(frame); })();
+</script>
+</body>
+</html>

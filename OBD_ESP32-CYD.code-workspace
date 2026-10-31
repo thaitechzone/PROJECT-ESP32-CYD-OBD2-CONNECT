@@ -1,0 +1,18 @@
+{
+	"folders": [
+		{
+			"name": "CYD (ESP32-2432S028)",
+			"path": "."
+		},
+		{
+			"name": "Simulator (ESP32 DevKit)",
+			"path": "simulator"
+		}
+	],
+	"settings": {
+		"files.exclude": {
+			"simulator": true,
+			".claude": true
+		}
+	}
+}

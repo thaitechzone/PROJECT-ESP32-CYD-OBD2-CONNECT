@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#000;font-family:'Chakra Petch',sans-serif;color:#F2F2EE;-webkit-font-smoothing:antialiased}a{color:#FFB000}a:hover{color:#FFC94D}input{font-family:inherit}input:focus{outline:none;border-color:#FFB000 !important}input[type=range]{accent-color:#FFB000}</style>
+</helmet>
+<div style="max-width:1120px;margin:0 auto;padding:28px 20px 48px;display:flex;flex-direction:column;gap:16px;font-variant-numeric:tabular-nums">
+
+  <header style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:14px;padding-bottom:18px;border-bottom:1px solid #14171B">
+    <div style="display:flex;align-items:center;gap:10px">
+      <span style="font-size:24px;font-weight:700;letter-spacing:.5px">CYD OBD-II</span>
+      <sc-if value="{{ isSim }}" hint-placeholder-val="{{ true }}"><span style="font-size:11px;font-weight:700;color:#000;background:#FFB000;padding:2px 7px;border-radius:3px;letter-spacing:.5px">SIM</span></sc-if>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;font-size:13px">
+      <div style="display:flex;align-items:center;gap:7px;padding:6px 12px;border:1px solid #2A2F36;border-radius:4px"><span style="width:7px;height:7px;border-radius:50%;background:#3DDC97"></span><span style="color:#8A9099">เครือข่าย</span><span>WiFi</span></div>
+      <div style="display:flex;align-items:center;gap:7px;padding:6px 12px;border:1px solid #2A2F36;border-radius:4px;color:{{ btColor }}"><span style="width:7px;height:7px;border-radius:50%;background:{{ btDot }}"></span><span style="color:#8A9099">OBD</span><span>{{ btText }}</span></div>
+      <div style="display:flex;align-items:center;gap:7px;padding:6px 12px;border:1px solid #2A2F36;border-radius:4px"><span style="color:#8A9099">IP</span><span>192.168.1.13</span></div>
+    </div>
+  </header>
+
+  <div style="display:flex;flex-wrap:wrap;gap:12px">
+    <div style="flex:1 1 300px;background:#14171B;border-radius:6px;padding:16px 16px 18px;display:flex;flex-direction:column;align-items:center;position:relative;min-height:280px">
+      <div style="align-self:stretch;display:flex;justify-content:space-between;font-size:12px;color:#8A9099;letter-spacing:1px"><span>ความเร็ว / รอบเครื่อง</span><span>LIVE</span></div>
+      <div style="position:relative;width:240px;height:236px;margin-top:4px">
+        <svg width="240" height="236" viewBox="10 22 144 144" style="position:absolute;left:0;top:0">
+          <path d="M36.75 145.25 A64 64 0 1 1 127.25 145.25" fill="none" stroke="#000" stroke-width="9"></path>
+          <path d="M31.09 150.91 A72 72 0 1 1 132.91 150.91" fill="none" stroke="#FF4D3D" stroke-width="2.5" pathLength="100" stroke-dasharray="0 81.25 18.75 100"></path>
+          <path d="M36.75 145.25 A64 64 0 1 1 127.25 145.25" fill="none" stroke="{{ rpmColor }}" stroke-width="9" pathLength="100" stroke-dasharray="{{ rpmDash }}"></path>
+          <sc-for list="{{ ticks }}" as="t" hint-placeholder-count="0">
+            <line x1="{{ t.x1 }}" y1="{{ t.y1 }}" x2="{{ t.x2 }}" y2="{{ t.y2 }}" stroke="{{ t.c }}" stroke-width="1.2"></line>
+          </sc-for>
+          <text x="44" y="162" fill="#8A9099" font-size="7" font-family="Chakra Petch" text-anchor="middle">0</text>
+          <text x="120" y="162" fill="#FF4D3D" font-size="7" font-family="Chakra Petch" text-anchor="middle">8k</text>
+        </svg>
+        <div style="position:absolute;left:0;right:0;top:72px;display:flex;flex-direction:column;align-items:center">
+          <div style="font-size:72px;font-weight:600;line-height:1;letter-spacing:-2px">{{ speed }}</div>
+          <div style="font-size:13px;color:#8A9099;letter-spacing:1px;margin-top:4px">km/h</div>
+        </div>
+        <div style="position:absolute;left:0;right:0;top:186px;display:flex;justify-content:center;align-items:baseline;gap:5px">
+          <span style="font-size:24px;font-weight:600;color:{{ rpmColor }}">{{ rpmText }}</span><span style="font-size:12px;color:#8A9099;letter-spacing:1px">RPM</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="flex:2 1 480px;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px">
+      <sc-for list="{{ tiles }}" as="tile" hint-placeholder-count="6">
+        <div style="background:#14171B;border-radius:6px;padding:14px 16px;display:flex;flex-direction:column;justify-content:space-between;gap:14px;min-height:112px">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><span style="font-size:13px;color:#8A9099">{{ tile.label }}</span><span style="font-size:12px;color:#8A9099">{{ tile.unit }}</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:8px"><span style="font-size:38px;font-weight:600;line-height:1;color:{{ tile.text }}">{{ tile.value }}</span><span style="font-size:10px;font-weight:700;letter-spacing:1px;color:{{ tile.color }}">{{ tile.status }}</span></div>
+          <div style="height:4px;background:#2A2F36;border-radius:2px;overflow:hidden"><div style="height:4px;width:{{ tile.pct }};background:{{ tile.color }}"></div></div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-start">
+    <div style="flex:1 1 420px;background:#14171B;border-radius:6px;padding:18px;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px">
+        <div style="display:flex;align-items:baseline;gap:10px"><span style="font-size:17px;font-weight:600">รหัสข้อผิดพลาด</span><span style="font-size:12px;color:#8A9099;letter-spacing:1px">DTC</span></div>
+        <div style="display:flex;align-items:center;gap:8px"><span style="font-size:22px;font-weight:700;line-height:1;color:{{ countColor }}">{{ faultCount }}</span><span style="font-size:12px;color:#8A9099">รหัส</span><sc-if value="{{ milOn }}" hint-placeholder-val="{{ true }}"><span style="font-size:11px;font-weight:700;color:#000;background:#FFB000;padding:2px 7px;border-radius:3px;letter-spacing:.5px">MIL ON</span></sc-if></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <sc-for list="{{ faults }}" as="f" hint-placeholder-count="3">
+          <div style="display:grid;grid-template-columns:4px 72px minmax(0,1fr);align-items:center;gap:12px;background:#000;border-radius:4px;overflow:hidden;min-height:52px;padding-right:12px">
+            <div style="align-self:stretch;background:{{ f.color }}"></div>
+            <div style="font-size:16px;font-weight:700;letter-spacing:.5px">{{ f.code }}</div>
+            <div style="display:flex;flex-direction:column;gap:2px;padding:8px 0"><span style="font-size:14px">{{ f.en }}</span><span style="font-size:12px;color:#8A9099">{{ f.th }}</span></div>
+          </div>
+        </sc-for>
+        <sc-if value="{{ noFaults }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;align-items:center;gap:10px;background:#000;border-radius:4px;min-height:52px;padding:0 14px;font-size:14px"><span style="width:8px;height:8px;border-radius:50%;background:#3DDC97"></span>ไม่พบรหัสข้อผิดพลาด</div>
+        </sc-if>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        <div onClick="{{ readCodes }}" style="height:44px;padding:0 20px;display:flex;align-items:center;justify-content:center;border:1px solid #2A2F36;border-radius:4px;font-size:14px;font-weight:600;letter-spacing:.5px;cursor:pointer;user-select:none" style-hover="border-color:#8A9099">{{ readLabel }}</div>
+        <div onPointerDown="{{ holdStart }}" onPointerUp="{{ holdEnd }}" onPointerLeave="{{ holdEnd }}" style="position:relative;flex:1 1 200px;height:44px;display:flex;align-items:center;justify-content:center;gap:8px;border:1px solid #FF4D3D;border-radius:4px;color:#FF4D3D;font-size:14px;font-weight:600;letter-spacing:.5px;cursor:pointer;overflow:hidden;user-select:none;touch-action:none">
+          <div style="position:absolute;left:0;top:0;bottom:0;width:{{ holdPct }};background:#FF4D3D;opacity:.25"></div>
+          <span style="position:relative">ลบรหัส</span><span style="position:relative;font-size:11px;color:#8A9099;font-weight:500">กดค้าง 2 วินาที</span>
+        </div>
+      </div>
+      <sc-if value="{{ isSim }}" hint-placeholder-val="{{ true }}"><div style="font-size:12px;color:#8A9099">ข้อมูลจำลอง (SIM)</div></sc-if>
+    </div>
+
+    <div style="flex:1 1 420px;background:#14171B;border-radius:6px;padding:18px;display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;align-items:baseline;gap:10px"><span style="font-size:17px;font-weight:600">ตั้งค่าอะแดปเตอร์ OBD</span><span style="font-size:12px;color:#8A9099;letter-spacing:1px">BLUETOOTH</span></div>
+      <label style="display:flex;flex-direction:column;gap:6px">
+        <span style="font-size:12px;color:#8A9099">ชื่อ หรือ MAC <span style="color:#2A2F36">·</span> AA:BB:CC:DD:EE:FF</span>
+        <input value="{{ obdName }}" onChange="{{ setName }}" style="height:44px;box-sizing:border-box;background:#000;border:1px solid #2A2F36;border-radius:4px;padding:0 14px;color:#F2F2EE;font-size:16px;font-weight:500">
+      </label>
+      <label style="display:flex;flex-direction:column;gap:6px">
+        <span style="font-size:12px;color:#8A9099">PIN <span style="color:#2A2F36">·</span> เว้นว่างถ้าไม่มี</span>
+        <input type="password" value="{{ pin }}" onChange="{{ setPin }}" placeholder="••••" style="height:44px;box-sizing:border-box;background:#000;border:1px solid #2A2F36;border-radius:4px;padding:0 14px;color:#F2F2EE;font-size:16px;letter-spacing:2px">
+      </label>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:12px;color:#8A9099">ความสว่างหน้าจอ</span><span style="font-size:15px;font-weight:600">{{ backlightText }}</span></div>
+        <input type="range" min="5" max="100" value="{{ backlight }}" onChange="{{ setBacklight }}" style="width:100%;margin:0;height:20px">
+      </div>
+      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding-top:4px">
+        <div onClick="{{ save }}" style="height:44px;padding:0 22px;display:flex;align-items:center;justify-content:center;background:#FFB000;color:#000;border-radius:4px;font-size:14px;font-weight:700;letter-spacing:.5px;cursor:pointer;user-select:none" style-hover="background:#FFC94D">บันทึกและเชื่อมต่อใหม่</div>
+        <span style="font-size:13px;color:#3DDC97">{{ savedMsg }}</span>
+      </div>
+    </div>
+  </div>
+
+  <footer style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;font-size:12px;color:#8A9099;padding-top:8px">
+    <span>อัปเดตอัตโนมัติทุก 0.6 วินาที</span>
+    <span>FW v1.2.0</span>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;btState&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;connecting&quot;,&quot;connected&quot;,&quot;lost&quot;],&quot;default&quot;:&quot;connecting&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;sim&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;live&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;coolantLimit&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;min&quot;:95,&quot;max&quot;:115,&quot;step&quot;:1,&quot;unit&quot;:&quot;°C&quot;,&quot;default&quot;:105,&quot;tsType&quot;:&quot;number&quot;}}">
+const FAULTS = [
+  { code: 'P0301', en: 'Cylinder 1 misfire', th: 'สูบ 1 จุดระเบิดไม่สมบูรณ์', color: '#FF4D3D' },
+  { code: 'P0420', en: 'Catalyst efficiency B1', th: 'แคตาไลติกประสิทธิภาพต่ำ', color: '#FFB000' },
+  { code: 'P0171', en: 'Mixture too lean B1', th: 'ส่วนผสมบางเกินไป', color: '#FFB000' }
+];
+class Component extends DCLogic {
+  state = { rpm: 4276, speed: 89, cool: 89, throt: 50.4, load: 54.8, batt: 14.0, intake: 34, fuel: 61.3, blink: false, faults: FAULTS, hold: 0, reading: false, name: 'OBDII', pin: '', backlight: 95, saved: '' };
+  componentDidMount() {
+    this.t = setInterval(() => this.setState(s => {
+      const base = { blink: !s.blink };
+      if (this.props.live === false) return base;
+      const w = (v, d, lo, hi) => Math.min(hi, Math.max(lo, v + (Math.random() - 0.5) * d));
+      const throt = w(s.throt, 10, 0, 90), rpm = w(s.rpm * 0.7 + (900 + throt * 70) * 0.3, 500, 800, 7400);
+      return { ...base, rpm, throt, speed: Math.round(w(s.speed, 4, 0, 160)), cool: w(s.cool, 1.2, 80, 104), load: w(s.load, 6, 5, 90), batt: w(s.batt, 0.15, 12.1, 14.5), intake: w(s.intake, 0.8, 25, 50), fuel: Math.max(0, s.fuel - 0.02) };
+    }), 600);
+  }
+  componentWillUnmount() { clearInterval(this.t); clearInterval(this.h); }
+  holdStart = () => {
+    clearInterval(this.h); const t0 = Date.now();
+    this.h = setInterval(() => {
+      const p = Math.min(100, (Date.now() - t0) / 20);
+      this.setState({ hold: p });
+      if (p >= 100) { clearInterval(this.h); this.setState({ faults: [], hold: 0 }); }
+    }, 40);
+  };
+  holdEnd = () => { clearInterval(this.h); this.setState({ hold: 0 }); };
+  renderVals() {
+    const s = this.state, limit = this.props.coolantLimit ?? 105, bt = this.props.btState ?? 'connecting';
+    const OK = '#3DDC97', WARN = '#FFB000', BAD = '#FF4D3D', TXT = '#F2F2EE', N = '#8A9099';
+    const cx = 82, cy = 100, ticks = [];
+    for (let v = 0; v <= 8; v++) { const a = (135 + 270 * v / 8) * Math.PI / 180; ticks.push({ x1: cx + 50 * Math.cos(a), y1: cy + 50 * Math.sin(a), x2: cx + 55 * Math.cos(a), y2: cy + 55 * Math.sin(a), c: v >= 7 ? BAD : N }); }
+    const pct = (v, a, b) => Math.max(4, Math.min(100, (v - a) / (b - a) * 100)) + '%';
+    const coolC = s.cool >= limit ? BAD : s.cool >= limit - 8 ? WARN : OK, battC = s.batt < 12.4 ? BAD : s.batt < 12.8 ? WARN : OK, fuelC = s.fuel < 10 ? BAD : s.fuel < 20 ? WARN : OK;
+    const st = c => c === OK ? 'ปกติ' : c === WARN ? 'เฝ้าระวัง' : c === BAD ? 'อันตราย' : '';
+    const tile = (label, unit, value, p, color) => ({ label, unit, value, pct: p, color, text: color === WARN || color === BAD ? color : TXT, status: st(color) });
+    const BT = { connecting: ['CONNECTING', WARN, s.blink ? WARN : '#2A2F36'], connected: ['CONNECTED', OK, OK], lost: ['DISCONNECTED', BAD, BAD] }[bt] || ['CONNECTING', WARN, WARN];
+    return {
+      isSim: this.props.sim !== false, btText: BT[0], btColor: BT[1], btDot: BT[2],
+      speed: s.speed, ticks, rpmText: (Math.round(s.rpm / 10) * 10).toLocaleString('en-US'),
+      rpmDash: `${(s.rpm / 8000 * 100).toFixed(2)} 100`, rpmColor: s.rpm >= 6500 ? BAD : WARN,
+      tiles: [
+        tile('น้ำหล่อเย็น', '°C', Math.round(s.cool), pct(s.cool, 60, 120), coolC),
+        tile('แบตเตอรี่', 'V', s.batt.toFixed(1), pct(s.batt, 11, 15), battC),
+        tile('น้ำมัน', '%', s.fuel.toFixed(1), pct(s.fuel, 0, 100), fuelC),
+        tile('คันเร่ง', '%', s.throt.toFixed(1), pct(s.throt, 0, 100), N),
+        tile('โหลดเครื่อง', '%', s.load.toFixed(1), pct(s.load, 0, 100), N),
+        tile('อากาศเข้า', '°C', Math.round(s.intake), pct(s.intake, 0, 80), N)
+      ],
+      faults: s.reading ? [] : s.faults, noFaults: !s.reading && s.faults.length === 0,
+      faultCount: s.reading ? '–' : s.faults.length, countColor: s.faults.length ? BAD : OK, milOn: s.faults.length > 0 && !s.reading,
+      readLabel: s.reading ? 'กำลังอ่าน…' : 'อ่านรหัส',
+      readCodes: () => { if (s.reading) return; this.setState({ reading: true }); setTimeout(() => this.setState({ reading: false, faults: FAULTS }), 1200); },
+      holdStart: this.holdStart, holdEnd: this.holdEnd, holdPct: s.hold + '%',
+      obdName: s.name, setName: e => this.setState({ name: e.target.value, saved: '' }),
+      pin: s.pin, setPin: e => this.setState({ pin: e.target.value, saved: '' }),
+      backlight: s.backlight, backlightText: s.backlight + '%', setBacklight: e => this.setState({ backlight: +e.target.value }),
+      save: () => { this.setState({ saved: 'บันทึกแล้ว · กำลังเชื่อมต่อ ' + s.name }); },
+      savedMsg: s.saved
+    };
+  }
+}
+</script>
+</body>
+</html>

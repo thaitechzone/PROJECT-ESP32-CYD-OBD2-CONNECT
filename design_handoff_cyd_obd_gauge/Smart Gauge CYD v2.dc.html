@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#101114;font-family:'Chakra Petch',sans-serif;color:#F2F2EE}a{color:#FFB000}a:hover{color:#FFC94D}</style>
+</helmet>
+<section style="padding:56px 64px 80px;display:flex;flex-direction:column;gap:40px;min-width:1420px">
+  <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:40px;border-bottom:1px solid #2A2F36;padding-bottom:24px">
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div style="font-size:14px;letter-spacing:3px;color:#FFB000;font-weight:600">CYD OBD-II · REDESIGN v2 · 320×240</div>
+      <div style="font-size:44px;font-weight:700;line-height:1.05">DASH · FAULT · CONFIG</div>
+      <div style="font-size:17px;color:#8A9099;max-width:820px;text-wrap:pretty">โครงเดิมครบทุกฟังก์ชัน ปรับใหม่: พื้นดำแทนไล่สีน้ำเงิน · ตัดกรอบซ้อนออก · ใช้สีเฉพาะเมื่อมีความหมาย (เขียว ปกติ / เหลือง เฝ้าระวัง / แดง อันตราย) · แท็บล่างสูง 34px กดง่ายบนจอ resistive · แสดงขนาดจริง ×2</div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(2,max-content);gap:48px 56px">
+
+    <!-- 01 DASH -->
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;gap:12px;align-items:baseline"><span style="font-size:13px;font-weight:700;color:#000;background:#FFB000;padding:2px 8px;border-radius:3px">01</span><span style="font-size:18px;font-weight:600">DASH</span><span style="font-size:14px;color:#8A9099">ความเร็วเป็นพระเอก · วงโค้ง = RPM · 6 ค่ามีแถบสถานะ</span></div>
+      <div style="background:#1E2024;padding:18px;border-radius:14px;box-shadow:0 0 0 1px #2A2F36,0 20px 40px rgba(0,0,0,.5)">
+        <div style="width:640px;height:480px;overflow:hidden;border-radius:3px;background:#000">
+          <div style="width:320px;height:240px;transform:scale(2);transform-origin:0 0;position:relative;background:#000;font-variant-numeric:tabular-nums">
+            <div style="position:absolute;left:0;top:0;right:0;height:20px;display:flex;align-items:center;justify-content:space-between;padding:0 8px;font-size:9px;letter-spacing:.5px;border-bottom:1px solid #14171B">
+              <div style="display:flex;align-items:center;gap:6px"><span style="font-weight:700;color:#F2F2EE">CYD OBD-II</span><sc-if value="{{ isSim }}" hint-placeholder-val="{{ true }}"><span style="font-size:7px;font-weight:700;color:#000;background:#FFB000;padding:1px 4px;border-radius:2px">SIM</span></sc-if></div>
+              <div style="display:flex;align-items:center;gap:4px;color:{{ btColor }}"><span style="width:5px;height:5px;border-radius:50%;background:{{ btDot }}"></span>{{ btText }}</div>
+            </div>
+            <svg width="320" height="240" viewBox="0 0 320 240" style="position:absolute;left:0;top:0">
+              <path d="M36.75 153.25 A64 64 0 1 1 127.25 153.25" fill="none" stroke="#14171B" stroke-width="9"></path>
+              <path d="M31.09 158.91 A72 72 0 1 1 132.91 158.91" fill="none" stroke="#FF4D3D" stroke-width="2.5" pathLength="100" stroke-dasharray="0 81.25 18.75 100"></path>
+              <path d="M36.75 153.25 A64 64 0 1 1 127.25 153.25" fill="none" stroke="{{ rpmColor }}" stroke-width="9" pathLength="100" stroke-dasharray="{{ rpmDash }}"></path>
+              <sc-for list="{{ ticks }}" as="t" hint-placeholder-count="0">
+                <line x1="{{ t.x1 }}" y1="{{ t.y1 }}" x2="{{ t.x2 }}" y2="{{ t.y2 }}" stroke="{{ t.c }}" stroke-width="{{ t.w }}"></line>
+              </sc-for>
+              <text x="44" y="170" fill="#8A9099" font-size="7" font-family="Chakra Petch" text-anchor="middle">0</text>
+              <text x="120" y="170" fill="#FF4D3D" font-size="7" font-family="Chakra Petch" text-anchor="middle">8k</text>
+            </svg>
+            <div style="position:absolute;left:0;width:164px;top:72px;display:flex;flex-direction:column;align-items:center">
+              <div style="font-size:46px;font-weight:600;line-height:1;letter-spacing:-1px">{{ speed }}</div>
+              <div style="font-size:9px;color:#8A9099;letter-spacing:1px;margin-top:2px">km/h</div>
+            </div>
+            <div style="position:absolute;left:0;width:164px;top:158px;display:flex;justify-content:center;align-items:baseline;gap:3px">
+              <span style="font-size:16px;font-weight:600;color:{{ rpmColor }}">{{ rpmText }}</span><span style="font-size:8px;color:#8A9099;letter-spacing:1px">RPM</span>
+            </div>
+            <div style="position:absolute;left:164px;right:4px;top:24px;height:178px;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:repeat(3,1fr);gap:4px">
+              <sc-for list="{{ tiles }}" as="tile" hint-placeholder-count="6">
+                <div style="background:#14171B;border-radius:3px;padding:5px 7px;display:flex;flex-direction:column;justify-content:space-between">
+                  <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:7px;color:#8A9099;letter-spacing:1px">{{ tile.label }}</span><span style="font-size:7px;color:#8A9099">{{ tile.unit }}</span></div>
+                  <div style="font-size:22px;font-weight:600;line-height:1;color:{{ tile.text }}">{{ tile.value }}</div>
+                  <div style="height:3px;background:#2A2F36;border-radius:2px;overflow:hidden"><div style="height:3px;width:{{ tile.pct }};background:{{ tile.color }}"></div></div>
+                </div>
+              </sc-for>
+            </div>
+            <div style="position:absolute;left:0;right:0;bottom:0;height:34px;display:grid;grid-template-columns:1fr 1fr 1fr;border-top:1px solid #2A2F36;font-size:10px;font-weight:600;letter-spacing:1px">
+              <div style="display:flex;align-items:center;justify-content:center;color:#F2F2EE;box-shadow:inset 0 2px 0 #FFB000;background:#14171B">DASH</div>
+              <div style="display:flex;align-items:center;justify-content:center;gap:4px;color:#8A9099">FAULT<span style="font-size:7px;color:#000;background:#FF4D3D;border-radius:6px;padding:0 4px;line-height:11px">3</span></div>
+              <div style="display:flex;align-items:center;justify-content:center;color:#8A9099">CONFIG</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 02 FAULT -->
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;gap:12px;align-items:baseline"><span style="font-size:13px;font-weight:700;color:#000;background:#FFB000;padding:2px 8px;border-radius:3px">02</span><span style="font-size:18px;font-weight:600">FAULT</span><span style="font-size:14px;color:#8A9099">โค้ดเด่น + คำอธิบายไทย · CLEAR ต้องกดค้าง</span></div>
+      <div style="background:#1E2024;padding:18px;border-radius:14px;box-shadow:0 0 0 1px #2A2F36,0 20px 40px rgba(0,0,0,.5)">
+        <div style="width:640px;height:480px;overflow:hidden;border-radius:3px;background:#000">
+          <div style="width:320px;height:240px;transform:scale(2);transform-origin:0 0;position:relative;background:#000;font-variant-numeric:tabular-nums">
+            <div style="position:absolute;left:0;top:0;right:0;height:20px;display:flex;align-items:center;justify-content:space-between;padding:0 8px;font-size:9px;letter-spacing:.5px;border-bottom:1px solid #14171B">
+              <div style="display:flex;align-items:center;gap:6px"><span style="font-weight:700;color:#F2F2EE">CYD OBD-II</span><sc-if value="{{ isSim }}" hint-placeholder-val="{{ true }}"><span style="font-size:7px;font-weight:700;color:#000;background:#FFB000;padding:1px 4px;border-radius:2px">SIM</span></sc-if></div>
+              <div style="display:flex;align-items:center;gap:4px;color:{{ btColor }}"><span style="width:5px;height:5px;border-radius:50%;background:{{ btDot }}"></span>{{ btText }}</div>
+            </div>
+            <div style="position:absolute;left:8px;right:8px;top:24px;height:24px;display:flex;align-items:center;justify-content:space-between">
+              <div style="display:flex;align-items:baseline;gap:5px"><span style="font-size:20px;font-weight:700;color:#FF4D3D;line-height:1">3</span><span style="font-size:9px;letter-spacing:1px;color:#F2F2EE">FAULT CODES</span></div>
+              <div style="display:flex;align-items:center;gap:6px"><span style="font-size:8px;font-weight:700;color:#000;background:#FFB000;padding:2px 5px;border-radius:2px;letter-spacing:.5px">MIL ON</span><span style="font-size:8px;color:#8A9099">1/1</span></div>
+            </div>
+            <div style="position:absolute;left:4px;right:4px;top:52px;display:flex;flex-direction:column;gap:3px">
+              <sc-for list="{{ faults }}" as="f" hint-placeholder-count="3">
+                <div style="height:32px;background:#14171B;border-radius:3px;display:grid;grid-template-columns:3px 52px 1fr;align-items:center;gap:8px;padding-right:8px;overflow:hidden">
+                  <div style="height:32px;background:{{ f.color }}"></div>
+                  <div style="font-size:12px;font-weight:700;letter-spacing:.5px">{{ f.code }}</div>
+                  <div style="display:flex;flex-direction:column;gap:1px;min-width:0"><span style="font-size:9px;color:#F2F2EE;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ f.en }}</span><span style="font-size:8px;color:#8A9099;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ f.th }}</span></div>
+                </div>
+              </sc-for>
+            </div>
+            <div style="position:absolute;left:4px;right:4px;top:164px;height:34px;display:grid;grid-template-columns:72px 1fr 34px 34px;gap:4px;font-size:9px;font-weight:600;letter-spacing:1px">
+              <div style="display:flex;align-items:center;justify-content:center;border:1px solid #2A2F36;border-radius:3px;color:#F2F2EE">READ</div>
+              <div style="position:relative;display:flex;align-items:center;justify-content:center;gap:5px;border:1px solid #FF4D3D;border-radius:3px;color:#FF4D3D;overflow:hidden">
+                <div style="position:absolute;left:0;top:0;bottom:0;width:{{ holdPct }};background:#FF4D3D;opacity:.22"></div>
+                <span style="position:relative">CLEAR</span><span style="position:relative;font-size:7px;color:#8A9099;font-weight:500;letter-spacing:.5px">HOLD 2s</span>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:center;background:#14171B;border-radius:3px;color:#2A2F36;font-size:12px">‹</div>
+              <div style="display:flex;align-items:center;justify-content:center;background:#14171B;border-radius:3px;color:#2A2F36;font-size:12px">›</div>
+            </div>
+            <div style="position:absolute;left:0;right:0;bottom:0;height:34px;display:grid;grid-template-columns:1fr 1fr 1fr;border-top:1px solid #2A2F36;font-size:10px;font-weight:600;letter-spacing:1px">
+              <div style="display:flex;align-items:center;justify-content:center;color:#8A9099">DASH</div>
+              <div style="display:flex;align-items:center;justify-content:center;gap:4px;color:#F2F2EE;box-shadow:inset 0 2px 0 #FFB000;background:#14171B">FAULT<span style="font-size:7px;color:#000;background:#FF4D3D;border-radius:6px;padding:0 4px;line-height:11px">3</span></div>
+              <div style="display:flex;align-items:center;justify-content:center;color:#8A9099">CONFIG</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 03 CONFIG -->
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;gap:12px;align-items:baseline"><span style="font-size:13px;font-weight:700;color:#000;background:#FFB000;padding:2px 8px;border-radius:3px">03</span><span style="font-size:18px;font-weight:600">CONFIG</span><span style="font-size:14px;color:#8A9099">CONNECT เป็นปุ่มหลัก · PIN ซ่อนไว้ · สไลเดอร์ใหญ่ขึ้น</span></div>
+      <div style="background:#1E2024;padding:18px;border-radius:14px;box-shadow:0 0 0 1px #2A2F36,0 20px 40px rgba(0,0,0,.5)">
+        <div style="width:640px;height:480px;overflow:hidden;border-radius:3px;background:#000">
+          <div style="width:320px;height:240px;transform:scale(2);transform-origin:0 0;position:relative;background:#000;font-variant-numeric:tabular-nums">
+            <div style="position:absolute;left:0;top:0;right:0;height:20px;display:flex;align-items:center;justify-content:space-between;padding:0 8px;font-size:9px;letter-spacing:.5px;border-bottom:1px solid #14171B">
+              <div style="display:flex;align-items:center;gap:6px"><span style="font-weight:700;color:#F2F2EE">CYD OBD-II</span><sc-if value="{{ isSim }}" hint-placeholder-val="{{ true }}"><span style="font-size:7px;font-weight:700;color:#000;background:#FFB000;padding:1px 4px;border-radius:2px">SIM</span></sc-if></div>
+              <div style="display:flex;align-items:center;gap:4px;color:{{ btColor }}"><span style="width:5px;height:5px;border-radius:50%;background:{{ btDot }}"></span>{{ btText }}</div>
+            </div>
+            <div style="position:absolute;left:6px;right:6px;top:24px;display:grid;grid-template-columns:1fr 92px;gap:4px">
+              <div style="height:36px;background:#14171B;border-radius:3px;padding:0 8px;display:flex;align-items:center;justify-content:space-between">
+                <div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:7px;color:#8A9099;letter-spacing:1px">OBD DEVICE · NAME / MAC</span><span style="font-size:12px;font-weight:600">OBDII</span></div>
+                <span style="font-size:12px;color:#8A9099">›</span>
+              </div>
+              <div style="height:36px;background:#14171B;border-radius:3px;padding:0 8px;display:flex;align-items:center;justify-content:space-between">
+                <div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:7px;color:#8A9099;letter-spacing:1px">PIN</span><span style="font-size:12px;font-weight:600;letter-spacing:2px">••••</span></div>
+                <span style="font-size:12px;color:#8A9099">›</span>
+              </div>
+            </div>
+            <div style="position:absolute;left:6px;right:6px;top:66px;height:34px;display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:10px;font-weight:700;letter-spacing:1px">
+              <div style="display:flex;align-items:center;justify-content:center;gap:6px;background:#FFB000;color:#000;border-radius:3px">CONNECT</div>
+              <div style="display:flex;align-items:center;justify-content:center;gap:5px;border:1px solid #2A2F36;color:#F2F2EE;border-radius:3px">RECAL<span style="font-size:7px;color:#8A9099;font-weight:500;letter-spacing:.5px">HOLD 2s</span></div>
+            </div>
+            <div style="position:absolute;left:6px;right:6px;top:106px;height:44px;background:#14171B;border-radius:3px;padding:6px 10px;display:flex;flex-direction:column;justify-content:space-between">
+              <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:7px;color:#8A9099;letter-spacing:1px">BACKLIGHT</span><span style="font-size:12px;font-weight:600">95%</span></div>
+              <div style="position:relative;height:16px;display:flex;align-items:center">
+                <div style="position:absolute;left:0;right:0;height:4px;background:#2A2F36;border-radius:2px"></div>
+                <div style="position:absolute;left:0;width:95%;height:4px;background:#FFB000;border-radius:2px"></div>
+                <div style="position:absolute;left:calc(95% - 8px);width:16px;height:16px;border-radius:50%;background:#F2F2EE;box-shadow:0 0 0 3px #000"></div>
+              </div>
+            </div>
+            <div style="position:absolute;left:6px;right:6px;top:156px;height:44px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px">
+              <div style="background:#14171B;border-radius:3px;padding:6px 8px;display:flex;flex-direction:column;justify-content:space-between"><span style="font-size:7px;color:#8A9099;letter-spacing:1px">UNITS</span><span style="font-size:12px;font-weight:600">{{ unitLabel }}</span></div>
+              <div style="background:#14171B;border-radius:3px;padding:6px 8px;display:flex;flex-direction:column;justify-content:space-between"><span style="font-size:7px;color:#8A9099;letter-spacing:1px">COOL ALERT</span><span style="font-size:12px;font-weight:600;color:#FF4D3D">{{ limitText }}</span></div>
+              <div style="background:#14171B;border-radius:3px;padding:6px 8px;display:flex;flex-direction:column;justify-content:space-between"><span style="font-size:7px;color:#8A9099;letter-spacing:1px">FW</span><span style="font-size:12px;font-weight:600">v1.2.0</span></div>
+            </div>
+            <div style="position:absolute;left:0;right:0;bottom:0;height:34px;display:grid;grid-template-columns:1fr 1fr 1fr;border-top:1px solid #2A2F36;font-size:10px;font-weight:600;letter-spacing:1px">
+              <div style="display:flex;align-items:center;justify-content:center;color:#8A9099">DASH</div>
+              <div style="display:flex;align-items:center;justify-content:center;gap:4px;color:#8A9099">FAULT<span style="font-size:7px;color:#000;background:#FF4D3D;border-radius:6px;padding:0 4px;line-height:11px">3</span></div>
+              <div style="display:flex;align-items:center;justify-content:center;color:#F2F2EE;box-shadow:inset 0 2px 0 #FFB000;background:#14171B">CONFIG</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 04 ALERT -->
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;gap:12px;align-items:baseline"><span style="font-size:13px;font-weight:700;color:#000;background:#FFB000;padding:2px 8px;border-radius:3px">04</span><span style="font-size:18px;font-weight:600">ALERT (ใหม่)</span><span style="font-size:14px;color:#8A9099">แทรกทับทุกแท็บเมื่อเกินเกณฑ์ · กระพริบ 1 Hz</span></div>
+      <div style="background:#1E2024;padding:18px;border-radius:14px;box-shadow:0 0 0 1px #2A2F36,0 20px 40px rgba(0,0,0,.5)">
+        <div style="width:640px;height:480px;overflow:hidden;border-radius:3px;background:#000">
+          <div style="width:320px;height:240px;transform:scale(2);transform-origin:0 0;position:relative;background:{{ alertBg }};font-variant-numeric:tabular-nums;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:#000">
+            <svg width="34" height="30" viewBox="0 0 34 30"><path d="M17 2 L32 28 L2 28 Z" fill="none" stroke="#000" stroke-width="3" stroke-linejoin="round"></path><rect x="15.5" y="11" width="3" height="9" fill="#000"></rect><rect x="15.5" y="22" width="3" height="3" fill="#000"></rect></svg>
+            <div style="font-size:30px;font-weight:700;letter-spacing:2px;line-height:1">OVERHEAT</div>
+            <div style="display:flex;align-items:baseline;gap:6px"><span style="font-size:10px;font-weight:600;letter-spacing:1px">COOLANT</span><span style="font-size:22px;font-weight:700">{{ alertText }}</span></div>
+            <div style="font-size:11px;font-weight:500">ลดความเร็ว และจอดพักเครื่องยนต์</div>
+            <div style="margin-top:6px;background:#000;color:#F2F2EE;font-size:11px;font-weight:600;padding:9px 20px;border-radius:3px">แตะเพื่อรับทราบ</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:40px;border-top:1px solid #2A2F36;padding-top:28px">
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div style="font-size:13px;letter-spacing:2px;color:#8A9099;font-weight:600">PALETTE · RGB565</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
+        <sc-for list="{{ palette }}" as="p" hint-placeholder-count="8">
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div style="height:40px;border-radius:3px;background:{{ p.hex }};box-shadow:inset 0 0 0 1px #2A2F36"></div>
+            <div style="font-size:12px;font-weight:600">{{ p.name }}</div>
+            <div style="font-size:11px;color:#8A9099">{{ p.hex }} · {{ p.c565 }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="font-size:13px;letter-spacing:2px;color:#8A9099;font-weight:600">สิ่งที่เปลี่ยนจากเดิม</div>
+      <div style="font-size:14px;line-height:1.6;color:#C9CCD1;display:flex;flex-direction:column;gap:6px;text-wrap:pretty">
+        <div>• พื้นหลังไล่สีน้ำเงิน → ดำสนิท: คอนทราสต์สูงขึ้น และวาดใหม่เร็วกว่า (fillRect สีเดียว)</div>
+        <div>• สถานะ BT: เหลือง = กำลังเชื่อม, เขียว = เชื่อมแล้ว, แดง = หลุด · SIM เป็นป้ายแยก</div>
+        <div>• ทุกช่องมีแถบ 3px บอกระดับ + สีบอกสถานะ ไม่ต้องอ่านตัวเลข</div>
+        <div>• แท็บ FAULT มีตัวเลขบอกจำนวนโค้ด เห็นได้จากหน้า DASH</div>
+        <div>• ปุ่มอันตราย (CLEAR / RECAL) เติมแถบตามเวลาที่กดค้าง</div>
+      </div>
+    </div>
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;btState&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;connecting&quot;,&quot;connected&quot;,&quot;lost&quot;],&quot;default&quot;:&quot;connecting&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;sim&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;unit&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;°C&quot;,&quot;°F&quot;],&quot;default&quot;:&quot;°C&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;live&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;coolantLimit&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;min&quot;:95,&quot;max&quot;:115,&quot;step&quot;:1,&quot;unit&quot;:&quot;°C&quot;,&quot;default&quot;:105,&quot;tsType&quot;:&quot;number&quot;}}">
+class Component extends DCLogic {
+  state = { rpm: 2380, speed: 45, cool: 89, throt: 10, load: 23, batt: 14.0, intake: 34, fuel: 56, blink: false, hold: 0 };
+  componentDidMount() {
+    this.t = setInterval(() => {
+      this.setState(s => {
+        const base = { blink: !s.blink, hold: (s.hold + 12) % 112 };
+        if (this.props.live === false) return base;
+        const w = (v, d, lo, hi) => Math.min(hi, Math.max(lo, v + (Math.random() - 0.5) * d));
+        const throt = w(s.throt, 14, 0, 85), rpm = w(s.rpm * 0.7 + (900 + throt * 70) * 0.3, 500, 800, 7400);
+        return { ...base, rpm, throt, speed: Math.round(w(s.speed, 4, 0, 160)), cool: w(s.cool, 1.2, 80, 104), load: w(s.load, 8, 5, 90), batt: w(s.batt, 0.15, 12.1, 14.5), intake: w(s.intake, 0.8, 25, 50), fuel: Math.max(0, s.fuel - 0.01) };
+      });
+    }, 600);
+  }
+  componentWillUnmount() { clearInterval(this.t); }
+  renderVals() {
+    const s = this.state, F = this.props.unit === '°F', limit = this.props.coolantLimit ?? 105, bt = this.props.btState ?? 'connecting';
+    const OK = '#3DDC97', WARN = '#FFB000', BAD = '#FF4D3D', TXT = '#F2F2EE';
+    const tv = c => Math.round(F ? c * 9 / 5 + 32 : c);
+    const cx = 82, cy = 108, ticks = [];
+    for (let v = 0; v <= 8; v += 1) {
+      const a = (135 + 270 * v / 8) * Math.PI / 180;
+      ticks.push({ x1: cx + 50 * Math.cos(a), y1: cy + 50 * Math.sin(a), x2: cx + 55 * Math.cos(a), y2: cy + 55 * Math.sin(a), c: v >= 7 ? BAD : '#8A9099', w: 1.2 });
+    }
+    const pct = (v, a, b) => Math.max(4, Math.min(100, (v - a) / (b - a) * 100)) + '%';
+    const coolC = s.cool >= limit ? BAD : s.cool >= limit - 8 ? WARN : OK;
+    const battC = s.batt < 12.4 ? BAD : s.batt < 12.8 ? WARN : OK;
+    const fuelC = s.fuel < 10 ? BAD : s.fuel < 20 ? WARN : OK;
+    const hex565 = h => { const n = parseInt(h.slice(1), 16), r = n >> 16, g = (n >> 8) & 255, b = n & 255; return '0x' + (((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3)).toString(16).toUpperCase().padStart(4, '0'); };
+    const BT = { connecting: ['BT CONNECTING', WARN, s.blink ? WARN : '#2A2F36'], connected: ['BT CONNECTED', OK, OK], lost: ['BT LOST', BAD, BAD] }[bt] || ['BT CONNECTING', WARN, WARN];
+    return {
+      isSim: this.props.sim !== false,
+      btText: BT[0], btColor: BT[1], btDot: BT[2],
+      speed: s.speed, ticks,
+      rpmText: Math.round(s.rpm / 10) * 10,
+      rpmDash: `${(s.rpm / 8000 * 100).toFixed(2)} 100`,
+      rpmColor: s.rpm >= 6500 ? BAD : WARN,
+      tiles: [
+        { label: 'COOLANT', unit: F ? '°F' : '°C', value: tv(s.cool), pct: pct(s.cool, 60, 120), color: coolC, text: coolC === OK ? TXT : coolC },
+        { label: 'THROTTLE', unit: '%', value: Math.round(s.throt), pct: pct(s.throt, 0, 100), color: '#8A9099', text: TXT },
+        { label: 'LOAD', unit: '%', value: Math.round(s.load), pct: pct(s.load, 0, 100), color: '#8A9099', text: TXT },
+        { label: 'BATTERY', unit: 'V', value: s.batt.toFixed(1), pct: pct(s.batt, 11, 15), color: battC, text: battC === OK ? TXT : battC },
+        { label: 'INTAKE', unit: F ? '°F' : '°C', value: tv(s.intake), pct: pct(s.intake, 0, 80), color: '#8A9099', text: TXT },
+        { label: 'FUEL', unit: '%', value: Math.round(s.fuel), pct: pct(s.fuel, 0, 100), color: fuelC, text: fuelC === OK ? TXT : fuelC }
+      ],
+      faults: [
+        { code: 'P0301', en: 'Cylinder 1 misfire', th: 'สูบ 1 จุดระเบิดไม่สมบูรณ์', color: BAD },
+        { code: 'P0420', en: 'Catalyst efficiency B1', th: 'แคตาไลติกประสิทธิภาพต่ำ', color: WARN },
+        { code: 'P0171', en: 'Mixture too lean B1', th: 'ส่วนผสมบางเกินไป', color: WARN }
+      ],
+      holdPct: Math.min(100, s.hold) + '%',
+      unitLabel: F ? '°F · km/h' : '°C · km/h', limitText: tv(limit) + (F ? '°F' : '°C'),
+      alertBg: s.blink ? '#FF4D3D' : '#D93A2B', alertText: tv(108) + (F ? '°F' : '°C'),
+      palette: [['Background', '#000000'], ['Surface', '#14171B'], ['Line', '#2A2F36'], ['Muted', '#8A9099'], ['Text', '#F2F2EE'], ['Accent / Watch', '#FFB000'], ['Normal', '#3DDC97'], ['Danger', '#FF4D3D']].map(([name, hex]) => ({ name, hex, c565: hex565(hex) }))
+    };
+  }
+}
+</script>
+</body>
+</html>
