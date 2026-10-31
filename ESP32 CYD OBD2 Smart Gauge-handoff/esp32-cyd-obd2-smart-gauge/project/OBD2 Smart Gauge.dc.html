@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0B0E11;color:#E8EDF2;font-family:'IBM Plex Sans Thai','Montserrat',sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#FFB020}a:hover{color:#FFD27A}
+button{font-family:inherit}
+</style>
+</helmet>
+<div style="min-height:100vh;padding:40px 32px;box-sizing:border-box;display:flex;flex-wrap:wrap;gap:40px;align-items:flex-start;justify-content:center">
+
+  <div style="display:flex;flex-direction:column;gap:14px;align-items:center">
+    <div style="padding:16px 22px;background:#16191D;border-radius:20px;border:1px solid #23282E;box-shadow:0 30px 80px rgba(0,0,0,.5)">
+      <div style="width:720px;height:480px;overflow:hidden;border-radius:4px;background:#000">
+        <div onPointerDown="{{ onDown }}" onPointerUp="{{ onUp }}" style="width:480px;height:320px;transform:scale(1.5);transform-origin:0 0;position:relative;background:#07090B;font-family:'Montserrat',sans-serif;color:#E8EDF2;font-variant-numeric:tabular-nums;user-select:none;touch-action:pan-y;overflow:hidden">
+
+          <div style="height:28px;display:flex;align-items:center;justify-content:space-between;padding:0 12px;border-bottom:1px solid #151A20">
+            <div style="display:flex;align-items:center;gap:6px;font-size:10px;font-weight:600;letter-spacing:.06em;color:#7C8894">
+              <div style="width:7px;height:7px;border-radius:50%;background:#34D399"></div>
+              <span>OBD2 · CAN 500K</span>
+            </div>
+            <div style="font-size:11px;font-weight:700;letter-spacing:.18em">{{ title }}</div>
+            <div style="display:flex;align-items:center;gap:8px;font-size:11px;font-weight:600;color:#C5CDD5">
+              <div style="display:flex;gap:3px">
+                <sc-for list="{{ dots }}" as="d" hint-placeholder-count="4"><div style="width:5px;height:5px;border-radius:50%;background:{{ d.bg }}"></div></sc-for>
+              </div>
+              <span>{{ clock }}</span>
+            </div>
+          </div>
+
+          <div style="height:248px;position:relative">
+
+            <sc-if value="{{ isDrive }}" hint-placeholder-val="{{ true }}">
+              <div style="height:248px;padding:8px 10px;box-sizing:border-box;display:flex;flex-direction:column;gap:6px">
+                <div style="display:flex;gap:3px;height:6px">
+                  <sc-for list="{{ shift }}" as="s" hint-placeholder-count="12"><div style="flex:1;border-radius:2px;background:{{ s.bg }}"></div></sc-for>
+                </div>
+                <div style="display:flex;gap:10px;flex:1;min-height:0">
+                  <div style="width:228px;height:226px;position:relative;flex-shrink:0">
+                    <svg width="228" height="226" viewBox="0 0 228 226" style="position:absolute;inset:0">
+                      <path d="{{ g.bg }}" stroke="#151B22" stroke-width="16" fill="none" stroke-linecap="round"></path>
+                      <path d="{{ g.red }}" stroke="#4A1416" stroke-width="16" fill="none"></path>
+                      <path d="{{ g.val }}" stroke="{{ g.color }}" stroke-width="16" fill="none" stroke-linecap="round"></path>
+                      <sc-for list="{{ g.ticks }}" as="k" hint-placeholder-count="0"><line x1="{{ k.x1 }}" y1="{{ k.y1 }}" x2="{{ k.x2 }}" y2="{{ k.y2 }}" stroke="{{ k.c }}" stroke-width="{{ k.w }}"></line></sc-for>
+                    </svg>
+                    <sc-for list="{{ g.labels }}" as="l" hint-placeholder-count="0"><div style="position:absolute;left:{{ l.x }}px;top:{{ l.y }}px;width:20px;height:14px;margin:-7px 0 0 -10px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:{{ l.c }}">{{ l.t }}</div></sc-for>
+                    <div style="position:absolute;left:0;right:0;top:78px;display:flex;flex-direction:column;align-items:center">
+                      <div style="font-size:62px;font-weight:700;line-height:1;letter-spacing:-.02em">{{ speed }}</div>
+                      <div style="font-size:11px;font-weight:600;color:#7C8894;letter-spacing:.14em;margin-top:4px">{{ speedUnit }}</div>
+                    </div>
+                    <div style="position:absolute;left:0;right:0;bottom:6px;display:flex;justify-content:center;align-items:baseline;gap:4px">
+                      <span style="font-size:18px;font-weight:700;color:{{ g.color }}">{{ rpm }}</span>
+                      <span style="font-size:9px;font-weight:600;color:#7C8894;letter-spacing:.12em">RPM</span>
+                    </div>
+                  </div>
+                  <div style="flex:1;display:flex;flex-direction:column;gap:7px;min-width:0">
+                    <sc-for list="{{ driveTiles }}" as="t" hint-placeholder-count="3">
+                      <div onClick="{{ t.onClick }}" style="flex:1;background:#10141A;border:1px solid {{ t.border }};border-radius:10px;padding:8px 12px 0;display:flex;flex-direction:column;justify-content:space-between;cursor:pointer;box-sizing:border-box">
+                        <div style="display:flex;justify-content:space-between;align-items:center">
+                          <span style="font-size:10px;font-weight:700;letter-spacing:.14em;color:#7C8894">{{ t.label }}</span>
+                          <span style="font-size:9px;font-weight:500;color:#4B5560">{{ t.pid }}</span>
+                        </div>
+                        <div style="display:flex;align-items:baseline;gap:4px">
+                          <span style="font-size:28px;font-weight:700;line-height:1;color:{{ t.valColor }}">{{ t.val }}</span>
+                          <span style="font-size:12px;font-weight:600;color:#7C8894">{{ t.unit }}</span>
+                        </div>
+                        <div style="height:4px;background:#1A2129;border-radius:2px;margin:0 -12px;overflow:hidden;border-radius:0 0 10px 10px">
+                          <div style="height:4px;width:{{ t.pct }};background:{{ t.barColor }}"></div>
+                        </div>
+                      </div>
+                    </sc-for>
+                  </div>
+                </div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ isGrid }}" hint-placeholder-val="{{ false }}">
+              <div style="height:248px;padding:10px;box-sizing:border-box;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:1fr 1fr;gap:8px">
+                <sc-for list="{{ gridTiles }}" as="t" hint-placeholder-count="6">
+                  <div onClick="{{ t.onClick }}" style="background:#10141A;border:1px solid {{ t.border }};border-radius:10px;padding:10px 12px 0;display:flex;flex-direction:column;justify-content:space-between;cursor:pointer;overflow:hidden">
+                    <div style="display:flex;justify-content:space-between">
+                      <span style="font-size:10px;font-weight:700;letter-spacing:.12em;color:#7C8894">{{ t.label }}</span>
+                      <span style="font-size:9px;color:#4B5560">{{ t.pid }}</span>
+                    </div>
+                    <div style="display:flex;align-items:baseline;gap:4px">
+                      <span style="font-size:34px;font-weight:700;line-height:1;color:{{ t.valColor }}">{{ t.val }}</span>
+                      <span style="font-size:12px;font-weight:600;color:#7C8894">{{ t.unit }}</span>
+                    </div>
+                    <div style="height:4px;background:#1A2129;margin:0 -12px">
+                      <div style="height:4px;width:{{ t.pct }};background:{{ t.barColor }}"></div>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ isDetail }}" hint-placeholder-val="{{ false }}">
+              <div style="height:248px;padding:10px;box-sizing:border-box;display:flex;gap:10px">
+                <div style="width:150px;display:flex;flex-direction:column;justify-content:space-between">
+                  <div style="position:relative;width:150px;height:150px">
+                    <svg width="150" height="150" viewBox="0 0 150 150" style="position:absolute;inset:0">
+                      <path d="{{ d.arcBg }}" stroke="#151B22" stroke-width="12" fill="none" stroke-linecap="round"></path>
+                      <path d="{{ d.arcVal }}" stroke="{{ d.color }}" stroke-width="12" fill="none" stroke-linecap="round"></path>
+                    </svg>
+                    <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding-top:6px">
+                      <div style="font-size:36px;font-weight:700;line-height:1;color:{{ d.valColor }}">{{ d.val }}</div>
+                      <div style="font-size:11px;font-weight:600;color:#7C8894;margin-top:4px">{{ d.unit }}</div>
+                    </div>
+                  </div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;background:#10141A;border:1px solid #1C232B;border-radius:10px;height:56px">
+                    <button onClick="{{ prevMetric }}" style="width:44px;height:56px;background:none;border:none;color:#C5CDD5;font-size:22px;cursor:pointer">‹</button>
+                    <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
+                      <span style="font-size:10px;font-weight:700;letter-spacing:.12em">{{ d.label }}</span>
+                      <span style="font-size:9px;color:#4B5560">{{ d.pid }}</span>
+                    </div>
+                    <button onClick="{{ nextMetric }}" style="width:44px;height:56px;background:none;border:none;color:#C5CDD5;font-size:22px;cursor:pointer">›</button>
+                  </div>
+                </div>
+                <div style="flex:1;display:flex;flex-direction:column;gap:8px;min-width:0">
+                  <div style="height:152px;background:#10141A;border:1px solid #1C232B;border-radius:10px;position:relative;overflow:hidden">
+                    <div style="position:absolute;top:8px;left:10px;font-size:9px;font-weight:700;letter-spacing:.14em;color:#7C8894">LAST 15 S</div>
+                    <svg width="298" height="150" viewBox="0 0 298 150" style="position:absolute;inset:0">
+                      <line x1="0" y1="50" x2="298" y2="50" stroke="#161C23"></line>
+                      <line x1="0" y1="90" x2="298" y2="90" stroke="#161C23"></line>
+                      <line x1="0" y1="130" x2="298" y2="130" stroke="#161C23"></line>
+                      <sc-if value="{{ d.hasWarn }}" hint-placeholder-val="{{ false }}"><line x1="0" y1="{{ d.warnY }}" x2="298" y2="{{ d.warnY }}" stroke="#FF4D4D" stroke-dasharray="4 4" stroke-opacity=".7"></line></sc-if>
+                      <polygon points="{{ d.area }}" fill="{{ d.color }}" fill-opacity=".12"></polygon>
+                      <polyline points="{{ d.line }}" fill="none" stroke="{{ d.color }}" stroke-width="2" stroke-linejoin="round"></polyline>
+                    </svg>
+                  </div>
+                  <div style="flex:1;display:grid;grid-template-columns:1fr 1fr 1fr 64px;gap:6px">
+                    <sc-for list="{{ d.stats }}" as="s" hint-placeholder-count="3">
+                      <div style="background:#10141A;border:1px solid #1C232B;border-radius:10px;display:flex;flex-direction:column;justify-content:center;padding:0 10px;gap:3px">
+                        <span style="font-size:9px;font-weight:700;letter-spacing:.14em;color:#7C8894">{{ s.k }}</span>
+                        <span style="font-size:18px;font-weight:700">{{ s.v }}</span>
+                      </div>
+                    </sc-for>
+                    <button onClick="{{ resetStats }}" style="background:#151B22;border:1px solid #232B34;border-radius:10px;color:#C5CDD5;font-size:9px;font-weight:700;letter-spacing:.12em;cursor:pointer;font-family:Montserrat">RESET</button>
+                  </div>
+                </div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ isSystem }}" hint-placeholder-val="{{ false }}">
+              <div style="height:248px;padding:10px;box-sizing:border-box;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:repeat(3,1fr);gap:8px">
+                <div style="background:#10141A;border:1px solid #1C232B;border-radius:10px;padding:0 12px;display:flex;flex-direction:column;justify-content:center;gap:4px">
+                  <span style="font-size:9px;font-weight:700;letter-spacing:.14em;color:#7C8894">ADAPTER</span>
+                  <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:13px;font-weight:700">ELM327 · BLE</span><span style="font-size:10px;font-weight:700;color:#34D399">CONNECTED</span></div>
+                </div>
+                <div style="background:#10141A;border:1px solid #1C232B;border-radius:10px;padding:0 12px;display:flex;flex-direction:column;justify-content:center;gap:4px">
+                  <span style="font-size:9px;font-weight:700;letter-spacing:.14em;color:#7C8894">PROTOCOL</span>
+                  <span style="font-size:13px;font-weight:700">ISO 15765-4 CAN</span>
+                </div>
+                <div style="background:#10141A;border:1px solid #1C232B;border-radius:10px;padding:0 6px 0 12px;display:flex;align-items:center;justify-content:space-between">
+                  <div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:9px;font-weight:700;letter-spacing:.14em;color:#7C8894">BRIGHTNESS</span><span style="font-size:18px;font-weight:700">{{ brightness }}%</span></div>
+                  <div style="display:flex;gap:4px">
+                    <button onClick="{{ dimDown }}" style="width:44px;height:44px;border-radius:8px;background:#151B22;border:1px solid #232B34;color:#E8EDF2;font-size:20px;cursor:pointer">−</button>
+                    <button onClick="{{ dimUp }}" style="width:44px;height:44px;border-radius:8px;background:#151B22;border:1px solid #232B34;color:#E8EDF2;font-size:20px;cursor:pointer">+</button>
+                  </div>
+                </div>
+                <div style="background:#10141A;border:1px solid #1C232B;border-radius:10px;padding:0 6px 0 12px;display:flex;align-items:center;justify-content:space-between">
+                  <span style="font-size:9px;font-weight:700;letter-spacing:.14em;color:#7C8894">UNITS</span>
+                  <div style="display:flex;background:#07090B;border-radius:8px;padding:3px;gap:2px">
+                    <sc-for list="{{ unitOpts }}" as="u" hint-placeholder-count="2">
+                      <button onClick="{{ u.onClick }}" style="height:38px;padding:0 12px;border:none;border-radius:6px;background:{{ u.bg }};color:{{ u.fg }};font-size:10px;font-weight:700;letter-spacing:.08em;cursor:pointer;font-family:Montserrat">{{ u.label }}</button>
+                    </sc-for>
+                  </div>
+                </div>
+                <div style="background:#10141A;border:1px solid {{ dtc.border }};border-radius:10px;padding:0 6px 0 12px;display:flex;align-items:center;justify-content:space-between">
+                  <div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:9px;font-weight:700;letter-spacing:.14em;color:#7C8894">FAULT CODES</span><span style="font-size:13px;font-weight:700;color:{{ dtc.color }}">{{ dtc.text }}</span></div>
+                  <button onClick="{{ clearDtc }}" style="height:44px;padding:0 12px;border-radius:8px;background:#151B22;border:1px solid #232B34;color:#E8EDF2;font-size:10px;font-weight:700;letter-spacing:.1em;cursor:pointer;font-family:Montserrat">CLEAR</button>
+                </div>
+                <div style="background:#10141A;border:1px solid #1C232B;border-radius:10px;padding:0 12px;display:flex;flex-direction:column;justify-content:center;gap:4px">
+                  <span style="font-size:9px;font-weight:700;letter-spacing:.14em;color:#7C8894">POLLING</span>
+                  <span style="font-size:13px;font-weight:700">8 PIDs · 12 Hz</span>
+                </div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ alert.show }}" hint-placeholder-val="{{ false }}">
+              <div onClick="{{ snooze }}" style="position:absolute;left:10px;right:10px;bottom:8px;height:40px;border-radius:10px;background:{{ alert.bg }};display:flex;align-items:center;gap:10px;padding:0 12px;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.5)">
+                <div style="width:20px;height:20px;border-radius:50%;background:#fff;color:#C81E1E;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800">!</div>
+                <span style="font-size:12px;font-weight:700;letter-spacing:.06em;color:#fff;flex:1">{{ alert.text }}</span>
+                <span style="font-size:9px;font-weight:700;letter-spacing:.12em;color:#FFD6D6">TAP TO MUTE</span>
+              </div>
+            </sc-if>
+          </div>
+
+          <div style="height:44px;display:flex;border-top:1px solid #151A20;background:#0A0D10">
+            <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="4">
+              <button onClick="{{ t.onClick }}" style="flex:1;height:44px;background:none;border:none;border-top:2px solid {{ t.line }};margin-top:-1px;color:{{ t.fg }};font-size:10px;font-weight:700;letter-spacing:.16em;cursor:pointer;font-family:Montserrat">{{ t.label }}</button>
+            </sc-for>
+          </div>
+
+          <div style="position:absolute;inset:0;background:#000;opacity:{{ dimOpacity }};pointer-events:none"></div>
+        </div>
+      </div>
+    </div>
+    <div style="font-size:12px;color:#6B7680">ESP32-2432S035 (CYD 3.5") · ILI9488 480×320 · แสดงผลขยาย 1.5×</div>
+  </div>
+
+  <div style="width:340px;max-width:100%;display:flex;flex-direction:column;gap:26px">
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div style="font-family:Montserrat;font-size:11px;font-weight:700;letter-spacing:.2em;color:#FFB020">OBD2 SMART GAUGE</div>
+      <div style="font-size:26px;font-weight:600;line-height:1.25;text-wrap:pretty">GUI สำหรับ ESP32 CYD 3.5" + LVGL</div>
+      <div style="font-size:14px;line-height:1.6;color:#9AA5B0;text-wrap:pretty">ปัดซ้าย/ขวาบนจอ หรือแตะแท็บด้านล่างเพื่อเปลี่ยนหน้า · แตะการ์ดค่าใดก็ได้เพื่อเปิดกราฟย้อนหลังของค่านั้น</div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="font-size:12px;font-weight:600;color:#7C8894">จำลองสถานการณ์ขับขี่</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <sc-for list="{{ scenarios }}" as="s" hint-placeholder-count="4">
+          <button onClick="{{ s.onClick }}" style="height:44px;border-radius:10px;border:1px solid {{ s.border }};background:{{ s.bg }};color:{{ s.fg }};font-size:14px;font-weight:600;cursor:pointer">{{ s.label }}</button>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="font-size:12px;font-weight:600;color:#7C8894">แมปไปยัง LVGL widget</div>
+      <div style="display:flex;flex-direction:column;border-top:1px solid #1F252C">
+        <sc-for list="{{ lvgl }}" as="r" hint-placeholder-count="6">
+          <div style="display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid #1F252C;font-size:13px">
+            <span style="color:#C5CDD5">{{ r.a }}</span>
+            <span style="font-family:Montserrat;font-size:12px;font-weight:600;color:#FFB020;text-align:right">{{ r.b }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="font-size:12px;font-weight:600;color:#7C8894">พาเลตสี (RGB565-safe)</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <sc-for list="{{ palette }}" as="p" hint-placeholder-count="6">
+          <div style="display:flex;flex-direction:column;gap:5px;align-items:flex-start">
+            <div style="width:44px;height:28px;border-radius:6px;border:1px solid #2A3038;background:{{ p.c }}"></div>
+            <span style="font-family:Montserrat;font-size:10px;color:#7C8894">{{ p.c }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;accent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#FFB020&quot;,&quot;options&quot;:[&quot;#FFB020&quot;,&quot;#22D3EE&quot;,&quot;#A3E635&quot;,&quot;#F472B6&quot;],&quot;tsType&quot;:&quot;string&quot;},&quot;units&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Metric&quot;,&quot;Imperial&quot;],&quot;default&quot;:&quot;Metric&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;shiftRpm&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:6500,&quot;min&quot;:3000,&quot;max&quot;:8000,&quot;step&quot;:250,&quot;tsType&quot;:&quot;number&quot;}}">
+class Component extends DCLogic {
+  M = {
+    coolant: { label: 'COOLANT', pid: 'PID 05', min: 40, max: 130, warn: 105, kind: 'temp', dp: 0 },
+    iat: { label: 'INTAKE', pid: 'PID 0F', min: -10, max: 80, warn: 60, kind: 'temp', dp: 0 },
+    boost: { label: 'BOOST', pid: 'PID 0B', min: -1, max: 2, warn: 1.6, kind: 'press', dp: 2 },
+    volt: { label: 'BATTERY', pid: 'PID 42', min: 10, max: 16, low: 11.8, kind: 'volt', dp: 1 },
+    tps: { label: 'THROTTLE', pid: 'PID 11', min: 0, max: 100, kind: 'pct', dp: 0 },
+    load: { label: 'LOAD', pid: 'PID 04', min: 0, max: 100, kind: 'pct', dp: 0 },
+  };
+  SC = {
+    idle: { label: 'จอดนิ่ง', rpm: 780, speed: 0, coolant: 88, iat: 32, boost: -0.65, volt: 14.1, tps: 2, load: 21 },
+    cruise: { label: 'ขับทางไกล', rpm: 2150, speed: 92, coolant: 90, iat: 35, boost: -0.2, volt: 14.2, tps: 18, load: 41 },
+    sport: { label: 'เร่งแรง', rpm: 6000, speed: 140, coolant: 99, iat: 49, boost: 1.45, volt: 13.9, tps: 90, load: 88 },
+    hot: { label: 'ความร้อนขึ้น', rpm: 1600, speed: 30, coolant: 113, iat: 58, boost: -0.35, volt: 11.6, tps: 10, load: 34 },
+  };
+  KEYS = ['coolant', 'iat', 'boost', 'volt', 'tps', 'load'];
+  state = { screen: 0, metric: 'coolant', scenario: 'cruise', t: 0, v: null, hist: {}, mm: {}, brightness: 85, snoozeUntil: 0, units: null, dtcCleared: false };
+
+  componentDidMount() {
+    const s = this.SC.cruise, v = { ...s }, hist = {}, mm = {};
+    this.KEYS.forEach(k => { hist[k] = Array(120).fill(s[k]); mm[k] = { min: s[k], max: s[k], sum: s[k], n: 1 }; });
+    this.setState({ v, hist, mm });
+    this.timer = setInterval(() => this.tick(), 120);
+  }
+  componentWillUnmount() { clearInterval(this.timer); }
+
+  tick() {
+    this.setState(st => {
+      if (!st.v) return null;
+      const t = st.t + 1, tg = { ...this.SC[st.scenario] };
+      if (st.scenario === 'sport') { const w = Math.sin(t / 9); tg.rpm = 5400 + 1900 * w; tg.tps = 70 + 30 * w; tg.boost = 0.9 + 0.65 * w; }
+      if (st.scenario === 'cruise') tg.rpm += 120 * Math.sin(t / 25);
+      const v = {}, hist = { ...st.hist }, mm = { ...st.mm };
+      const rng = { rpm: 8000, speed: 240, coolant: 90, iat: 90, boost: 3, volt: 6, tps: 100, load: 100 };
+      Object.keys(rng).forEach(k => {
+        const rate = k === 'coolant' || k === 'iat' ? 0.03 : 0.12;
+        v[k] = st.v[k] + (tg[k] - st.v[k]) * rate + (Math.random() - 0.5) * rng[k] * 0.006;
+      });
+      v.speed = Math.max(0, v.speed); v.tps = Math.max(0, Math.min(100, v.tps));
+      this.KEYS.forEach(k => {
+        hist[k] = [...st.hist[k].slice(1), v[k]];
+        const m = st.mm[k]; mm[k] = { min: Math.min(m.min, v[k]), max: Math.max(m.max, v[k]), sum: m.sum + v[k], n: m.n + 1 };
+      });
+      return { t, v, hist, mm };
+    });
+  }
+
+  pol(cx, cy, r, a) { const d = a * Math.PI / 180; return [cx + r * Math.cos(d), cy + r * Math.sin(d)]; }
+  arc(cx, cy, r, a0, a1) {
+    if (a1 - a0 < 0.5) return '';
+    const p0 = this.pol(cx, cy, r, a0), p1 = this.pol(cx, cy, r, a1);
+    return `M${p0[0].toFixed(1)} ${p0[1].toFixed(1)}A${r} ${r} 0 ${a1 - a0 > 180 ? 1 : 0} 1 ${p1[0].toFixed(1)} ${p1[1].toFixed(1)}`;
+  }
+  imperial() { return (this.state.units ?? this.props.units ?? 'Metric') === 'Imperial'; }
+  conv(k, x) {
+    const m = this.M[k], imp = this.imperial();
+    if (m.kind === 'temp') return imp ? x * 9 / 5 + 32 : x;
+    if (m.kind === 'press') return imp ? x * 14.5 : x;
+    return x;
+  }
+  unit(k) {
+    const m = this.M[k], imp = this.imperial();
+    return { temp: imp ? '°F' : '°C', press: imp ? 'psi' : 'bar', volt: 'V', pct: '%' }[m.kind];
+  }
+  fmt(k, x) {
+    const m = this.M[k], c = this.conv(k, x);
+    const dp = m.kind === 'press' && this.imperial() ? 1 : m.dp;
+    return (m.kind === 'press' && c > 0 ? '+' : '') + c.toFixed(dp);
+  }
+  isWarn(k, x) { const m = this.M[k]; return (m.warn != null && x > m.warn) || (m.low != null && x < m.low); }
+  pct(k, x) { const m = this.M[k]; return Math.max(0, Math.min(1, (x - m.min) / (m.max - m.min))); }
+
+  tile(k, accent) {
+    const x = this.state.v[k], w = this.isWarn(k, x);
+    return {
+      label: this.M[k].label, pid: this.M[k].pid, val: this.fmt(k, x), unit: this.unit(k),
+      pct: (this.pct(k, x) * 100).toFixed(1) + '%', barColor: w ? '#FF4D4D' : accent,
+      valColor: w ? '#FF6B6B' : '#E8EDF2', border: w ? '#5A1C1F' : '#1C232B',
+      onClick: () => this.setState({ screen: 2, metric: k }),
+    };
+  }
+
+  renderVals() {
+    const st = this.state, accent = this.props.accent ?? '#FFB020', shiftRpm = this.props.shiftRpm ?? 6500;
+    const imp = this.imperial(), blink = Math.floor(st.t / 3) % 2 === 0;
+    const titles = ['DRIVE', 'GAUGES', 'TREND', 'SYSTEM'];
+    const go = i => () => this.setState({ screen: i });
+    const base = {
+      title: titles[st.screen], isDrive: st.screen === 0, isGrid: st.screen === 1, isDetail: st.screen === 2, isSystem: st.screen === 3,
+      dots: titles.map((_, i) => ({ bg: i === st.screen ? accent : '#2A323B' })),
+      tabs: titles.map((l, i) => ({ label: l, onClick: go(i), fg: i === st.screen ? '#E8EDF2' : '#5C6772', line: i === st.screen ? accent : 'transparent' })),
+      clock: new Date().toTimeString().slice(0, 5),
+      onDown: e => { this.dx = e.clientX; },
+      onUp: e => {
+        if (this.dx == null) return; const d = e.clientX - this.dx; this.dx = null;
+        if (Math.abs(d) > 60) this.setState(s => ({ screen: (s.screen + (d < 0 ? 1 : 3)) % 4 }));
+      },
+      brightness: st.brightness, dimOpacity: ((100 - st.brightness) / 100 * 0.75).toFixed(2),
+      dimDown: () => this.setState(s => ({ brightness: Math.max(20, s.brightness - 10) })),
+      dimUp: () => this.setState(s => ({ brightness: Math.min(100, s.brightness + 10) })),
+      unitOpts: ['Metric', 'Imperial'].map(u => ({ label: u.toUpperCase(), onClick: () => this.setState({ units: u }), bg: (imp ? 'Imperial' : 'Metric') === u ? accent : 'transparent', fg: (imp ? 'Imperial' : 'Metric') === u ? '#07090B' : '#7C8894' })),
+      scenarios: Object.keys(this.SC).map(k => ({
+        label: this.SC[k].label, onClick: () => this.setState({ scenario: k, snoozeUntil: 0, dtcCleared: false }),
+        bg: st.scenario === k ? accent : '#14181D', fg: st.scenario === k ? '#0B0E11' : '#C5CDD5', border: st.scenario === k ? accent : '#262C33',
+      })),
+      lvgl: [
+        { a: 'เปลี่ยนหน้าด้วยการปัด', b: 'lv_tileview' },
+        { a: 'เกจรอบเครื่อง', b: 'lv_arc ×3' },
+        { a: 'Shift light', b: 'lv_obj ×12' },
+        { a: 'การ์ดค่า + แถบ', b: 'lv_label + lv_bar' },
+        { a: 'กราฟย้อนหลัง', b: 'lv_chart (LINE)' },
+        { a: 'แถบเตือน', b: 'lv_obj + lv_anim' },
+        { a: 'แท็บล่าง', b: 'lv_btnmatrix' },
+        { a: 'ฟอนต์', b: 'Montserrat 10–48' },
+      ],
+      palette: ['#07090B', '#10141A', '#7C8894', '#E8EDF2', accent, '#FF4D4D', '#34D399'].map(c => ({ c })),
+      snooze: () => this.setState(s => ({ snoozeUntil: s.t + 160 })),
+      clearDtc: () => this.setState({ dtcCleared: true }),
+      dtc: st.scenario === 'hot' && !st.dtcCleared
+        ? { text: 'P0217 · OVERHEAT', color: '#FF6B6B', border: '#5A1C1F' }
+        : { text: 'NO CODES', color: '#34D399', border: '#1C232B' },
+      prevMetric: () => this.setState(s => ({ metric: this.KEYS[(this.KEYS.indexOf(s.metric) + 5) % 6] })),
+      nextMetric: () => this.setState(s => ({ metric: this.KEYS[(this.KEYS.indexOf(s.metric) + 1) % 6] })),
+      resetStats: () => this.setState(s => { const v = s.v[s.metric]; return { mm: { ...s.mm, [s.metric]: { min: v, max: v, sum: v, n: 1 } } }; }),
+    };
+    if (!st.v) return { ...base, shift: [], driveTiles: [], gridTiles: [], g: {}, d: { stats: [] }, alert: { show: false }, speed: '0', rpm: '0', speedUnit: '' };
+
+    const v = st.v, rpm = Math.max(0, v.rpm);
+    const cx = 114, cy = 116, r = 98, A0 = 135, SW = 270, a = x => A0 + SW * Math.min(1, x / 8000);
+    const over = rpm >= shiftRpm;
+    const ticks = [], labels = [];
+    for (let i = 0; i <= 16; i++) {
+      const ang = A0 + SW * i / 16, major = i % 2 === 0, p0 = this.pol(cx, cy, r - 13, ang), p1 = this.pol(cx, cy, r - (major ? 22 : 17), ang);
+      const red = i * 500 >= shiftRpm;
+      ticks.push({ x1: p0[0].toFixed(1), y1: p0[1].toFixed(1), x2: p1[0].toFixed(1), y2: p1[1].toFixed(1), c: red ? '#FF4D4D' : (major ? '#56616C' : '#2A323B'), w: major ? 2 : 1 });
+      if (major) { const p = this.pol(cx, cy, r - 33, ang); labels.push({ x: p[0].toFixed(1), y: p[1].toFixed(1), t: String(i / 2), c: red ? '#FF6B6B' : '#7C8894' }); }
+    }
+    const g = { bg: this.arc(cx, cy, r, A0, A0 + SW), red: this.arc(cx, cy, r, a(shiftRpm), A0 + SW), val: this.arc(cx, cy, r, A0, a(rpm)), color: over ? (blink ? '#FF4D4D' : '#FF8A3D') : accent, ticks, labels };
+
+    const startS = shiftRpm - 2400, step = 2400 / 12;
+    const shift = Array.from({ length: 12 }, (_, i) => {
+      const on = rpm >= startS + step * i;
+      if (over) return { bg: blink ? '#FF4D4D' : '#2A0C0E' };
+      return { bg: on ? (i < 5 ? '#34D399' : i < 9 ? accent : '#FF4D4D') : '#161C23' };
+    });
+
+    const k = st.metric, m = this.M[k], dx = v[k], dw = this.isWarn(k, dx);
+    const dc = dw ? '#FF4D4D' : accent, h = st.hist[k], W = 298, H = 150, top = 26, bot = 10;
+    const yy = x => (top + (1 - this.pct(k, x)) * (H - top - bot)).toFixed(1);
+    const pts = h.map((x, i) => `${(i / (h.length - 1) * W).toFixed(1)},${yy(x)}`).join(' ');
+    const mmk = st.mm[k], thr = m.warn ?? m.low;
+    const d = {
+      label: m.label, pid: m.pid, val: this.fmt(k, dx), unit: this.unit(k), color: dc, valColor: dw ? '#FF6B6B' : '#E8EDF2',
+      arcBg: this.arc(75, 78, 62, A0, A0 + SW), arcVal: this.arc(75, 78, 62, A0, A0 + SW * this.pct(k, dx)),
+      line: pts, area: `0,${H} ${pts} ${W},${H}`, hasWarn: thr != null, warnY: thr != null ? yy(thr) : 0,
+      stats: [{ k: 'MIN', v: this.fmt(k, mmk.min) }, { k: 'AVG', v: this.fmt(k, mmk.sum / mmk.n) }, { k: 'MAX', v: this.fmt(k, mmk.max) }],
+    };
+
+    const warns = this.KEYS.filter(x => this.isWarn(x, v[x]));
+    const alertOn = warns.length > 0 && st.t > st.snoozeUntil;
+    const wk = warns[0];
+    const alert = { show: alertOn, bg: blink ? '#C81E1E' : '#8E1518', text: wk ? `${this.M[wk].label} ${wk === 'volt' ? 'LOW' : 'HIGH'} · ${this.fmt(wk, v[wk])} ${this.unit(wk)}` + (warns.length > 1 ? ` (+${warns.length - 1})` : '') : '' };
+
+    return {
+      ...base, g, shift, d, alert,
+      speed: String(Math.round(imp ? v.speed * 0.621 : v.speed)), speedUnit: imp ? 'MPH' : 'KM/H',
+      rpm: (Math.round(rpm / 10) * 10).toLocaleString('en-US'),
+      driveTiles: ['coolant', 'boost', 'volt'].map(x => this.tile(x, accent)),
+      gridTiles: this.KEYS.map(x => this.tile(x, accent)),
+    };
+  }
+}
+</script>
+</body>
+</html>

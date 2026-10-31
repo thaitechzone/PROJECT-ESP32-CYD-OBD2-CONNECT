@@ -175,28 +175,29 @@ constexpr const char *TAB_NAMES[TAB_COUNT] = {"DRIVE", "FOCUS", "TRIP", "FAULT",
 constexpr int16_t CONTENT_TOP = STATUS_H + 2;  // พื้นที่เนื้อหา (ปัดเปลี่ยนหน้าได้) y 24-206
 constexpr int16_t CONTENT_BOTTOM = TAB_LINE_Y;
 
-// ---- หน้า DRIVE ----
+// ---- หน้า DRIVE (ดีไซน์ OBD2 Smart Gauge: มาตรวัดซ้าย + การ์ดค่า 3 ใบขวา) ----
 constexpr Rect SHIFT_BAR = {6, 26, 308, 5};
-constexpr int SHIFT_SEGS = 15;
-constexpr int GAUGE_CX = 160;
-constexpr int GAUGE_CY = 128;
-constexpr int GAUGE_R_OUT = 77;       // วงโค้งหลัก r 72 หนา 10
+constexpr int SHIFT_SEGS = 12;
+constexpr int GAUGE_CX = 160;         // กึ่งกลางหัวข้อของหน้า FOCUS
+constexpr int DRV_CX = 90;            // จุดศูนย์กลางมาตรวัดหน้า DRIVE
+constexpr int DRV_CY = 122;
+constexpr int GAUGE_R_OUT = 79;       // วงโค้งหลัก หนา 12 (r 67-79)
 constexpr int GAUGE_R_IN = 67;
 constexpr int GAUGE_START_DEG = 45;   // มุมของ drawArc (0 = ทิศ 6 นาฬิกา ตามเข็ม) = 135° ของ SVG
 constexpr int GAUGE_SWEEP_DEG = 270;
-constexpr Rect GAUGE_HIT = {80, 34, 160, 172};
-// พื้นที่ล้างตัวเลข (อยู่ในวงใน r 67 ไม่ลบเส้นโค้ง)
-constexpr Rect SPEED_BOX = {104, 98, 112, 44};
-constexpr Rect PEAK_BOX = {118, 164, 84, 12};
-constexpr Rect RPM_BOX = {96, 180, 128, 20};
-constexpr int HOLD_RING_R = 46;       // วงแหวนความคืบหน้าตอนกดค้างมาตรวัด
-constexpr int TILE_COUNT = 4;
-constexpr int TILE_W = 68;
-constexpr int TILE_H = 82;
+constexpr Rect GAUGE_HIT = {6, 34, 168, 172};
+// พื้นที่ล้างตัวเลข (อยู่ในวงใน ไม่ลบเส้นโค้ง; ขีดและตัวเลขหน้าปัดวาดซ้ำหลังล้าง)
+constexpr int SPEED_BASE_Y = DRV_CY + 24;
+constexpr Rect SPEED_BOX = {DRV_CX - 46, SPEED_BASE_Y - 42, 92, 44};
+constexpr Rect RPM_BOX = {DRV_CX - 64, 182, 128, 20};
+constexpr int HOLD_RING_R = 52;       // วงแหวนความคืบหน้าตอนกดค้างมาตรวัด (อยู่ระหว่างตัวเลขหน้าปัดกับขีด)
+constexpr int TILE_COUNT = 3;
+constexpr int TILE_W = 132;
+constexpr int TILE_H = 53;
 
-constexpr Rect tileRect(int i)  // 0 ซ้ายบน, 1 ซ้ายล่าง, 2 ขวาบน, 3 ขวาล่าง
+constexpr Rect tileRect(int i)  // การ์ดเรียงลงมาด้านขวา
 {
-    return {static_cast<int16_t>(i < 2 ? 6 : 246), static_cast<int16_t>(i % 2 == 0 ? 36 : 122), TILE_W, TILE_H};
+    return {182, static_cast<int16_t>(35 + i * 57), TILE_W, TILE_H};
 }
 
 // ---- หน้า FOCUS ----
@@ -530,7 +531,7 @@ int drawnSweep = NEVER;
 int drawnArcColor = NEVER;
 int drawnPeak = NEVER;
 int drawnShift = NEVER;
-int drawnTile[TILE_COUNT] = {NEVER, NEVER, NEVER, NEVER};
+int drawnTile[TILE_COUNT] = {NEVER, NEVER, NEVER};
 int drawnDtcKey = NEVER;
 int drawnFocusKey = NEVER;
 int drawnFocusStats = NEVER;
@@ -2113,8 +2114,8 @@ constexpr PidInfo PID_INFO[P_COUNT] = {  // ลำดับตาม PidIdx
     {"BATTERY", "BATT V", "V", 11, 15, 1},
 };
 constexpr uint8_t FOCUS_ORDER[P_COUNT] = {P_RPM, P_SPEED, P_COOL, P_VOLT, P_FUEL, P_THR, P_LOAD, P_IAT};
-constexpr uint8_t TILE_PID[TILE_COUNT] = {P_COOL, P_VOLT, P_FUEL, P_THR};  // ซ้ายบน, ซ้ายล่าง, ขวาบน, ขวาล่าง
-constexpr bool TILE_SHOWS_MAX[TILE_COUNT] = {true, false, false, true};    // บรรทัดล่างของการ์ด: MAX หรือ MIN
+constexpr uint8_t TILE_PID[TILE_COUNT] = {P_COOL, P_VOLT, P_THR};  // บนลงล่าง (FUEL ดูได้ในหน้า FOCUS)
+constexpr const char *TILE_TAG[TILE_COUNT] = {"PID 05", "ATRV", "PID 11"};  // ป้ายเล็กมุมขวาบนของการ์ด
 static_assert(app::RPM_MAX == 8000.0f, "dial numerals 0-8 assume an 8000 rpm scale");
 
 enum class Level : uint8_t { Neutral, Ok, Warn, Bad };
@@ -2627,8 +2628,8 @@ float rpmAngleRad(float rpm)
 
 void gaugePoint(float a, float r, float &x, float &y)
 {
-    x = GAUGE_CX + r * cosf(a);
-    y = GAUGE_CY + r * sinf(a);
+    x = DRV_CX + r * cosf(a);
+    y = DRV_CY + r * sinf(a);
 }
 
 // shift light: 15 ช่อง ติดจาก (shift - 1500) ถึง shift รอบ, ถึง shift = กะพริบ bad 4 Hz
@@ -2646,48 +2647,51 @@ void updateShiftLight(uint32_t now)
         const int x1 = SHIFT_BAR.x + ((i + 1) * (SHIFT_BAR.w + 2)) / SHIFT_SEGS - 2;
         uint16_t c = T->shiftOff;
         if (flash) c = key == 100 ? T->bad : T->shiftOff;
-        else if (i < lit) c = i < 9 ? T->ok : (i < 13 ? T->warn : T->bad);
+        else if (i < lit) c = i < 5 ? T->ok : (i < 9 ? T->accent : T->bad);
         tft.fillRoundRect(x0, SHIFT_BAR.y, x1 - x0, SHIFT_BAR.h, 1, c);
     }
 }
 
-// ขีดทุก 1000 รอบ r 57-63 (7k, 8k สี bad) และจุดย่อยกึ่งกลางที่ r 52; วาดซ้ำหลังล้างพื้นที่ตัวเลข
+// ขีดทุก 500 รอบ (ขีดพันรอบยาวกว่า) r 57-63 และตัวเลขหน้าปัด 0-8 (พันรอบ) ที่ r 47; ตั้งแต่ redline เป็นสี bad
+// วาดซ้ำหลังล้างพื้นที่ตัวเลข
 void drawGaugeTicks()
 {
-    for (int k = 0; k <= 8; k++) {
-        const float a = rpmAngleRad(k * 1000.0f);
+    for (int k = 0; k <= 16; k++) {
+        const bool major = k % 2 == 0;
+        const bool red = k * 500.0f >= app::RPM_RED;
+        const float a = rpmAngleRad(k * 500.0f);
         float x0, y0, x1, y1;
-        gaugePoint(a, 57, x0, y0);
-        gaugePoint(a, 63, x1, y1);
-        tft.drawWideLine(x0, y0, x1, y1, 1.5f, k >= 7 ? T->bad : T->muted, T->bg);
-        if (k % 2 == 1) {
-            gaugePoint(a, 52, x0, y0);
-            tft.fillCircle(static_cast<int>(lroundf(x0)), static_cast<int>(lroundf(y0)), 1, T->line);
+        gaugePoint(a, 63, x0, y0);
+        gaugePoint(a, major ? 57 : 60, x1, y1);
+        tft.drawWideLine(x0, y0, x1, y1, major ? 1.8f : 1.0f, red ? T->bad : (major ? T->muted : T->line), T->bg);
+        if (major) {
+            float lx, ly;
+            gaugePoint(a, 47, lx, ly);
+            char n[2] = {static_cast<char>('0' + k / 2), '\0'};
+            textAt(FONT_10S, n, static_cast<int>(lroundf(lx)), static_cast<int>(lroundf(ly)) + 4, C_BASELINE, red ? T->bad : T->muted, T->bg);
         }
     }
 }
 
 void drawGaugeStatic()
 {
-    // redline r 81 หนา 3 ช่วง 6500-8000 รอบ
-    const int redStart = GAUGE_START_DEG + static_cast<int>(GAUGE_SWEEP_DEG * app::RPM_RED / app::RPM_MAX);
-    tft.drawArc(GAUGE_CX, GAUGE_CY, 82, 80, redStart, GAUGE_START_DEG + GAUGE_SWEEP_DEG, T->bad, T->bg, false);
     drawGaugeTicks();
-    // ตัวเลขหน้าปัด 0 2 4 6 8 (พันรอบ) ที่ r 89
-    for (int k = 0; k <= 8; k += 2) {
-        float x, y;
-        gaugePoint(rpmAngleRad(k * 1000.0f), 89, x, y);
-        char n[2] = {static_cast<char>('0' + k), '\0'};
-        textAt(FONT_10S, n, static_cast<int>(lroundf(x)), static_cast<int>(lroundf(y)) + 4, C_BASELINE, k >= 7 ? T->bad : T->muted, T->bg);
-    }
-    textAt(FONT_11S, "km/h", GAUGE_CX, 156, C_BASELINE, T->muted, T->bg);
+    textAt(FONT_11S, "KM/H", DRV_CX, DRV_CY + 40, C_BASELINE, T->muted, T->bg);
 }
 
-// ช่วง a..b (องศาของสเกล 0..270) ของวงโค้งหลัก r 67-77
+// ช่วง a..b (องศาของสเกล 0..270) ของวงโค้งหลัก r 67-79
 void gaugeArc(int a, int b, uint16_t color)
 {
     if (b <= a) return;
-    tft.drawArc(GAUGE_CX, GAUGE_CY, GAUGE_R_OUT, GAUGE_R_IN, GAUGE_START_DEG + a, GAUGE_START_DEG + b, color, T->bg, false);
+    tft.drawArc(DRV_CX, DRV_CY, GAUGE_R_OUT, GAUGE_R_IN, GAUGE_START_DEG + a, GAUGE_START_DEG + b, color, T->bg, false);
+}
+
+// ส่วนที่ยังไม่ถึงรอบ: ราง track และโซนแดง (badSoft) ตั้งแต่ redline เป็นต้นไป
+void gaugeTrack(int a, int b)
+{
+    const int redDeg = static_cast<int>(GAUGE_SWEEP_DEG * app::RPM_RED / app::RPM_MAX);
+    gaugeArc(a, min(b, redDeg), T->track);
+    gaugeArc(max(a, redDeg), b, T->badSoft);
 }
 
 // peak: ขีดสี text จาก r 66 ถึง r 76 ที่มุมของรอบสูงสุด (วาดทับวงโค้ง)
@@ -2697,32 +2701,33 @@ void drawPeakMarker()
     float x0, y0, x1, y1;
     const float a = rpmAngleRad(peakRpm);
     gaugePoint(a, 66, x0, y0);
-    gaugePoint(a, 76, x1, y1);
+    gaugePoint(a, 80, x1, y1);
     tft.drawWideLine(x0, y0, x1, y1, 2.5f, T->text, T->track);
 }
 
 // กดค้างมาตรวัด: วงแหวน accent r 45-47 เริ่มด้านบน หมุนตามเข็มตามเวลาที่กด (0 = ลบวงแหวน)
 void drawGaugeHoldRing(int progressPercent)
 {
-    tft.drawArc(GAUGE_CX, GAUGE_CY, HOLD_RING_R + 1, HOLD_RING_R - 1, 0, 360, T->bg, T->bg, false);
+    tft.drawArc(DRV_CX, DRV_CY, HOLD_RING_R + 1, HOLD_RING_R - 1, 0, 360, T->bg, T->bg, false);
     if (progressPercent > 0) {
         const int end = 180 + 360 * progressPercent / 100;  // drawArc: 0 = ด้านล่าง, 180 = ด้านบน
         if (end <= 360) {
-            tft.drawArc(GAUGE_CX, GAUGE_CY, HOLD_RING_R + 1, HOLD_RING_R - 1, 180, end, T->accent, T->bg, false);
+            tft.drawArc(DRV_CX, DRV_CY, HOLD_RING_R + 1, HOLD_RING_R - 1, 180, end, T->accent, T->bg, false);
         } else {
-            tft.drawArc(GAUGE_CX, GAUGE_CY, HOLD_RING_R + 1, HOLD_RING_R - 1, 180, 360, T->accent, T->bg, false);
-            tft.drawArc(GAUGE_CX, GAUGE_CY, HOLD_RING_R + 1, HOLD_RING_R - 1, 0, end - 360, T->accent, T->bg, false);
+            tft.drawArc(DRV_CX, DRV_CY, HOLD_RING_R + 1, HOLD_RING_R - 1, 180, 360, T->accent, T->bg, false);
+            tft.drawArc(DRV_CX, DRV_CY, HOLD_RING_R + 1, HOLD_RING_R - 1, 0, end - 360, T->accent, T->bg, false);
         }
     }
     // วงแหวนผ่านพื้นที่ตัวเลข: ให้วาดตัวเลขใหม่
-    drawnSpeed = drawnRpmText = drawnPeakText = NEVER;
+    drawnSpeed = drawnRpmText = NEVER;
 }
 
 void drawTileStatic(int i)
 {
     const Rect r = tileRect(i);
     drawCardBox(r);
-    textAt(FONT_10S, PID_INFO[TILE_PID[i]].label, r.x + 7, r.y + 16, L_BASELINE, T->muted, T->surf);
+    textAt(FONT_10S, PID_INFO[TILE_PID[i]].name, r.x + 8, r.y + 15, L_BASELINE, T->muted, T->surf);
+    textAt(FONT_10S, TILE_TAG[i], r.x + r.w - 8, r.y + 15, R_BASELINE, T->muted, T->surf);
 }
 
 // คืน true ถ้ามีการวาด
@@ -2733,36 +2738,33 @@ bool updateTile(int i, const Rect2View &view)
     const float v = view.v[idx];
     const bool na = view.na[idx];
     const Level level = pidLevel(idx, v);
-    const int trend = na ? 0 : trendOf(idx, v);
-    const float sub = TILE_SHOWS_MAX[i] ? stats[idx].max : stats[idx].min;
     uint32_t h = na ? 1u : (isnan(v) ? 2u : static_cast<uint32_t>(lroundf(v * 10.0f)) + 16u);
     h = h * 31 + static_cast<uint32_t>(level);
-    h = h * 31 + static_cast<uint32_t>(trend + 1);
-    h = h * 31 + (isnan(sub) ? 7u : static_cast<uint32_t>(lroundf(sub * 10.0f)));
     const int key = static_cast<int>(h & 0x3FFFFFFF);
     if (key == drawnTile[i]) return false;
     drawnTile[i] = key;
 
-    char text[16];
-    tft.fillRect(r.x + 7, r.y + 20, r.w - 9, 28, T->surf);
+    // ขอบการ์ด: ค่าอันตราย = สี bad
+    const uint16_t border = level == Level::Bad ? T->bad : (T->cardOutline ? T->cardLine : T->surf);
+    tft.drawRoundRect(r.x, r.y, r.w, r.h, 4, border);
+
+    tft.fillRect(r.x + 2, r.y + 18, r.w - 4, 22, T->surf);
     if (na) {  // รถคันนี้ไม่รองรับค่านี้ (ไม่ใช่สัญญาณหลุด)
-        textAt(FONT_14B, "N/A", r.x + 7, r.y + 40, L_BASELINE, T->muted, T->surf);
+        textAt(FONT_14B, "N/A", r.x + 8, r.y + 38, L_BASELINE, T->muted, T->surf);
     } else {
+        char text[16];
         formatPid(idx, v, text, sizeof(text));
-        textAt(FONT_24S, text, r.x + 7, r.y + 46, L_BASELINE, valueColor(idx, v), T->surf);
+        const int16_t vw = textAt(FONT_24S, text, r.x + 8, r.y + 38, L_BASELINE, valueColor(idx, v), T->surf);
+        if (!isnan(v)) textAt(FONT_11S, PID_INFO[idx].unit, r.x + 8 + vw + 4, r.y + 38, L_BASELINE, T->muted, T->surf);
     }
-    if (trend != 0) {  // สามเหลี่ยม 8x6 มุมขวาบนของตัวเลข
-        const int tx = r.x + 60, ty = r.y + 25;
-        if (trend > 0) tft.fillTriangle(tx - 4, ty + 3, tx + 4, ty + 3, tx, ty - 3, T->muted);
-        else tft.fillTriangle(tx - 4, ty - 3, tx + 4, ty - 3, tx, ty + 3, T->muted);
-    }
+    // แถบระดับชิดขอบล่างของการ์ด: ปกติ accent, เฝ้าดู/อันตรายใช้สีเกณฑ์
     const float frac = (na || isnan(v)) ? NAN : (v - PID_INFO[idx].lo) / (PID_INFO[idx].hi - PID_INFO[idx].lo);
-    drawLevelBar(r.x + 7, r.y + 54, r.w - 14, frac, level == Level::Neutral ? T->text : levelColor(level));
-    tft.fillRect(r.x + 7, r.y + 63, r.w - 9, 13, T->surf);
-    char value[12];
-    formatPid(idx, sub, value, sizeof(value));
-    snprintf(text, sizeof(text), "%s %s", TILE_SHOWS_MAX[i] ? "MAX" : "MIN", value);
-    textAt(FONT_10S, text, r.x + 7, r.y + 73, L_BASELINE, T->muted, T->surf);
+    const uint16_t barColor = (level == Level::Warn || level == Level::Bad) ? levelColor(level) : T->accent;
+    tft.fillRect(r.x + 3, r.y + r.h - 6, r.w - 6, 4, T->track);
+    if (!isnan(frac)) {
+        const int fw = max(2, static_cast<int>(lroundf(constrain(frac, 0.0f, 1.0f) * (r.w - 6))));
+        tft.fillRect(r.x + 3, r.y + r.h - 6, fw, 4, barColor);
+    }
     return true;
 }
 
@@ -2781,22 +2783,8 @@ void updateDashboard(uint32_t now)
         else snprintf(text, sizeof(text), "%d", speedKey);
         tft.fillRect(SPEED_BOX.x, SPEED_BOX.y, SPEED_BOX.w, SPEED_BOX.h, T->bg);
         ticksDirty = true;
-        textAt(FONT_50S, text, GAUGE_CX, 140, C_BASELINE, speedKey < 0 ? T->muted : T->text, T->bg);
+        textAt(FONT_50S, text, DRV_CX, SPEED_BASE_Y, C_BASELINE, speedKey < 0 ? T->muted : T->text, T->bg);
         drawnSpeed = speedKey;
-    }
-
-    // PEAK
-    const int peakKey = peakRpm > 0 ? static_cast<int>(lroundf(peakRpm / 10.0f)) * 10 : -1;
-    if (peakKey != drawnPeakText) {
-        tft.fillRect(PEAK_BOX.x, PEAK_BOX.y, PEAK_BOX.w, PEAK_BOX.h, T->bg);
-        ticksDirty = true;
-        if (peakKey > 0) {
-            char n[12];
-            formatThousands(peakKey, n, sizeof(n));
-            snprintf(text, sizeof(text), "PEAK %s", n);
-            textAt(FONT_10S, text, GAUGE_CX, 174, C_BASELINE, T->muted, T->bg);
-        }
-        drawnPeakText = peakKey;
     }
 
     // รอบเครื่อง: Dark = accent, Light = text, ถึง redline = bad
@@ -2809,7 +2797,7 @@ void updateDashboard(uint32_t now)
         else formatThousands(rpmKey, text, sizeof(text));
         const int16_t vw = textWidthIn(FONT_18B, text);
         const int16_t lw = textWidthIn(FONT_10S, "RPM");
-        const int16_t x0 = GAUGE_CX - (vw + 4 + lw) / 2;
+        const int16_t x0 = DRV_CX - (vw + 4 + lw) / 2;
         tft.fillRect(RPM_BOX.x, RPM_BOX.y, RPM_BOX.w, RPM_BOX.h, T->bg);
         textAt(FONT_18B, text, x0, 196, L_BASELINE, rpmKey < 0 ? T->muted : (red ? T->bad : T->rpmNormal), T->bg);
         textAt(FONT_10S, "RPM", x0 + vw + 4, 196, L_BASELINE, T->muted, T->bg);
@@ -2825,12 +2813,12 @@ void updateDashboard(uint32_t now)
     int lo = 0, hi = GAUGE_SWEEP_DEG;  // ช่วงองศาที่วาดใหม่
     if (drawnSweep == NEVER || colorKey != drawnArcColor || peakMarkKey != drawnPeak) {
         gaugeArc(0, sweep, arcColor);
-        gaugeArc(sweep, GAUGE_SWEEP_DEG, T->track);
+        gaugeTrack(sweep, GAUGE_SWEEP_DEG);
     } else if (sweep > drawnSweep) {
         gaugeArc(drawnSweep, sweep, arcColor);
         lo = drawnSweep, hi = sweep;
     } else if (sweep < drawnSweep) {
-        gaugeArc(sweep, drawnSweep, T->track);
+        gaugeTrack(sweep, drawnSweep);
         lo = sweep, hi = drawnSweep;
     } else {
         hi = -1;
@@ -2845,7 +2833,9 @@ void updateDashboard(uint32_t now)
     drawnArcColor = colorKey;
     drawnPeak = peakMarkKey;
 
-    for (int i = 0; i < TILE_COUNT; i++) updateTile(i, view);  // ส่วนที่เปลี่ยนของการ์ดอยู่ใต้ toast
+    for (int i = 0; i < TILE_COUNT; i++) {
+        if (updateTile(i, view) && tileRect(i).y < TOAST_RECT.y + TOAST_RECT.h) drew = true;  // การ์ดชนกับ toast: วาด toast ทับอีกครั้ง
+    }
     if (drew) toastDirty = true;
 }
 
@@ -4379,7 +4369,7 @@ void onActivate(Widget w, uint32_t now)
         if (page != next) enterPage(next);
         return;
     }
-    if (w >= Widget::Tile0 && w <= Widget::Tile3) {
+    if (w >= Widget::Tile0 && w <= Widget::Tile2) {
         openFocus(TILE_PID[w - Widget::Tile0]);
         return;
     }
