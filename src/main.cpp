@@ -522,6 +522,7 @@ bool calResultOk = false;
 constexpr int NEVER = -32768;
 char netLabel[24] = "";  // IP สำหรับเปิดหน้าเว็บ ที่แถบสถานะแสดง (ส่วนเครือข่ายเขียน) "" = ยังไม่มี IP
 int drawnStatus = NEVER;
+bool drawnConn = false;
 int drawnFaultBadge = NEVER;
 int drawnSpeed = NEVER;
 int drawnRpmText = NEVER;
@@ -2455,28 +2456,58 @@ void resetTrip()
 // ขวา: ป้ายสถานะ BT แบบ pill  เขียว = BT CONNECTED,  แดง = BT DISCONNECTED
 void updateStatusBar(uint32_t now)
 {
-    const bool connected = btConnected();
-    const bool waiting = connected && !isRealData(now);
+    // ค่าที่วาดจริงผ่านตัวหน่วง (debounce): สถานะที่สลับไปมาถี่ ๆ (BT ต่อ/หลุดสลับ, ECU ตอบสลับเว้น) ต้องคงที่ >= STATUS_DEBOUNCE_MS
+    // จึงจะเปลี่ยนที่จอ ไม่งั้นแถบจะกะพริบทุกครั้งที่สถานะสะดุด
+    constexpr uint32_t STATUS_DEBOUNCE_MS = 1000;
+    static bool shownConn = false, shownWait = false;
+    static uint32_t connSince = 0, waitSince = 0;
+    const bool rawConn = btConnected();
+    const bool rawWait = rawConn && !isRealData(now);
+    const bool force = drawnStatus == NEVER;
+    if (force || rawConn == shownConn) {
+        shownConn = rawConn;
+        connSince = 0;
+    } else {
+        if (connSince == 0) connSince = now;
+        if (now - connSince >= STATUS_DEBOUNCE_MS) { shownConn = rawConn; connSince = 0; }
+    }
+    if (force || rawWait == shownWait) {
+        shownWait = rawWait;
+        waitSince = 0;
+    } else {
+        if (waitSince == 0) waitSince = now;
+        if (now - waitSince >= STATUS_DEBOUNCE_MS) { shownWait = rawWait; waitSince = 0; }
+    }
+    const bool connected = shownConn;
+    const bool waiting = shownConn && shownWait;
+
     uint32_t h = (connected ? 1 : 0) | (waiting ? 2 : 0);
-    for (const char *p = netLabel; *p != '\0'; p++) h = h * 31 + static_cast<uint8_t>(*p);
+    for (const char *p = netLabel; *p != ' '; p++) h = h * 31 + static_cast<uint8_t>(*p);
     const int key = static_cast<int>(h & 0x3FFFFFFF);
     if (key == drawnStatus) return;
+    const bool pillChanged = force || connected != drawnConn;
     drawnStatus = key;
-
-    tft.fillRect(0, 0, SCREEN_W, STATUS_H, T->bg);
-    tft.drawFastHLine(0, STATUS_H, SCREEN_W, T->line);
+    drawnConn = connected;
 
     const char *text = connected ? "BT CONNECTED" : "BT DISCONNECTED";
     const uint16_t color = connected ? T->ok : T->bad;
     const int16_t w = textWidthIn(FONT_10B, text);
     const int16_t pillW = w + 22;  // จุด 6 + ช่องว่าง + ข้อความ
     const int16_t x = SCREEN_W - 6 - pillW;
-    tft.fillRoundRect(x, 3, pillW, 16, 8, T->surf);
-    tft.drawRoundRect(x, 3, pillW, 16, 8, color);
-    tft.fillSmoothCircle(x + 10, 11, 3, color, T->surf);
-    textAt(FONT_10B, text, x + 17, 15, L_BASELINE, color, T->surf);
 
-    const int16_t tw = textAt(FONT_11B, netLabel[0] != '\0' ? netLabel : "OBD-II", 8, 15, L_BASELINE, T->text, T->bg);
+    if (pillChanged) {
+        // ล้างทั้งแถบเฉพาะตอนป้าย BT เปลี่ยน (ความกว้างป้ายต่างกัน) ส่วนข้อความซ้ายล้างเฉพาะฝั่งซ้ายด้านล่าง
+        tft.fillRect(0, 0, SCREEN_W, STATUS_H, T->bg);
+        tft.drawFastHLine(0, STATUS_H, SCREEN_W, T->line);
+        tft.fillRoundRect(x, 3, pillW, 16, 8, T->surf);
+        tft.drawRoundRect(x, 3, pillW, 16, 8, color);
+        tft.fillSmoothCircle(x + 10, 11, 3, color, T->surf);
+        textAt(FONT_10B, text, x + 17, 15, L_BASELINE, color, T->surf);
+    } else {
+        tft.fillRect(0, 0, x - 1, STATUS_H, T->bg);  // ป้าย BT ไม่เปลี่ยน: ไม่แตะ
+    }
+
+    const int16_t tw = textAt(FONT_11B, netLabel[0] != ' ' ? netLabel : "OBD-II", 8, 15, L_BASELINE, T->text, T->bg);
     const int waitX = 8 + tw + 8;
     const int waitW = x - 8 - waitX;
     if (waiting && waitW >= 30) {
